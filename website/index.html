@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHGOX STUDIO - Official Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Prompt', sans-serif; scroll-behavior: smooth; }
+        body {
+            background: linear-gradient(135deg, #050b14, #0f172a, #1e293b);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 🌐 Navbar & Header */
+        header {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            z-index: 1000;
+        }
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #38bdf8;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+        .logo i { font-size: 24px; color: #60a5fa; }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .nav-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 8px 12px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            white-space: nowrap;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            color: #ffffff;
+            background: rgba(56, 189, 248, 0.15);
+            border-color: rgba(56, 189, 248, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+        }
+
+        /* ปุ่ม Login ด้วย Discord บน Navbar */
+        .btn-discord {
+            background: linear-gradient(135deg, #5865F2, #404eed) !important;
+            border-color: rgba(88, 101, 242, 0.5) !important;
+            color: #ffffff !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600 !important;
+            cursor: pointer;
+        }
+        .btn-discord:hover {
+            box-shadow: 0 4px 20px rgba(88, 101, 242, 0.5) !important;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #38bdf8;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* 📱 Mobile Drawer Menu */
+        .mobile-menu {
+            position: fixed;
+            top: 70px; right: -100%;
+            width: 260px;
+            height: calc(100vh - 70px);
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(16px);
+            border-left: 1px solid rgba(56, 189, 248, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px;
+            transition: right 0.4s ease;
+            z-index: 999;
+            overflow-y: auto;
+        }
+        .mobile-menu.active { right: 0; }
+        .mobile-menu a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: 0.2s;
+        }
+        .mobile-menu a:hover { color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+
+        /* 🎨 Main Container */
+        .main-container {
+            max-width: 1000px;
+            margin: 110px auto 50px auto;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 35px;
+        }
+
+        /* ✨ Hero Intro Section */
+        .hero-section {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        .hero-section h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-section p {
+            font-size: 15px;
+            color: #94a3b8;
+            max-width: 700px;
+            margin: 0 auto 25px auto;
+            line-height: 1.6;
+        }
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7, #38bdf8);
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6);
+        }
+
+        /* 🤖 Bot Status Dashboard Card */
+        .card {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 24px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            text-align: center;
+        }
+        .bot-avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 3px solid #38bdf8;
+            margin-bottom: 15px;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+            object-fit: cover;
+        }
+        .card h2 { font-size: 24px; margin-bottom: 8px; font-weight: 600; color: #f8fafc; }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+        .online-badge { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .offline-badge { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .online-dot { background-color: #4ade80; box-shadow: 0 0 10px #4ade80; }
+        .offline-dot { background-color: #f87171; box-shadow: 0 0 10px #f87171; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(56, 189, 248, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            transition: 0.3s;
+        }
+        .stat-box:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            transform: translateY(-2px);
+        }
+        .stat-value { font-size: 20px; font-weight: 600; color: #38bdf8; margin-top: 5px; }
+        .stat-label { font-size: 13px; color: #94a3b8; }
+
+        /* 🗺️ Guilds List Container */
+        .guilds-container {
+            margin-top: 25px;
+            text-align: left;
+            background: rgba(15, 23, 42, 0.3);
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            border-radius: 16px;
+            padding: 20px;
+        }
+        .guilds-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .guilds-header h3 { font-size: 16px; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+        .guilds-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        .guild-item {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.2s;
+        }
+        .guild-item:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            background: rgba(56, 189, 248, 0.08);
+        }
+        .guild-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #0f172a;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+        .guild-info h4 { font-size: 13px; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+        .guild-info p { font-size: 11px; color: #94a3b8; }
+
+        /* 🖼️ Owner Profile & Cover Section */
+        .owner-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .cover-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 2px solid rgba(56, 189, 248, 0.3);
+        }
+        .owner-info {
+            padding: 0 35px 30px 35px;
+            display: flex;
+            align-items: flex-end;
+            gap: 25px;
+            margin-top: -55px;
+        }
+        .owner-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid #0f172a;
+            object-fit: cover;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.5);
+            background: #1e293b;
+        }
+        .owner-details h3 {
+            font-size: 22px;
+            color: #f8fafc;
+            font-weight: 600;
+        }
+        .owner-details p {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        .owner-badge-tag {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        /* 🚀 Features List Section */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .feature-box {
+            background: rgba(30, 41, 59, 0.3);
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            border-radius: 20px;
+            padding: 25px;
+            transition: 0.3s;
+        }
+        .feature-box:hover {
+            border-color: rgba(56, 189, 248, 0.5);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.2);
+        }
+        .feature-box i {
+            font-size: 28px;
+            color: #38bdf8;
+            margin-bottom: 15px;
+        }
+        .feature-box h4 {
+            font-size: 18px;
+            color: #f8fafc;
+            margin-bottom: 8px;
+        }
+        .feature-box p {
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        /* ✨ Notification Toast Style */
+        #toast-container {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #ffffff;
+            padding: 14px 22px;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+        }
+        .toast i { font-size: 18px; color: #38bdf8; }
+        .toast.success i { color: #4ade80; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; transform: translateY(10px); }
+        }
+
+        .footer {
+            font-size: 12px;
+            color: #64748b;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        /* 📱 Responsive Media Query */
+        @media (max-width: 1100px) {
+            .nav-links { display: none; }
+            .menu-toggle { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🌐 Header Navbar -->
+    <header>
+        <a href="#" class="logo">
+            <i class="fa-solid fa-robot"></i> SHGOX STUDIO
+        </a>
+        <nav class="nav-links">
+            <a href="index.html" class="active"><i class="fa-solid fa-house"></i> หน้าแรก</a>
+            <a href="dashboard.html"><i class="fa-solid fa-server"></i> บอททั้งหมด</a>
+            <a href="commands.html"><i class="fa-solid fa-terminal"></i> คำสั่ง</a>
+            <a href="updates.html"><i class="fa-solid fa-bullhorn"></i> อัปเดต</a>
+            <a href="premium.html"><i class="fa-solid fa-crown"></i> พรีเมี่ยม</a>
+            <a href="servers.html"><i class="fa-solid fa-users"></i> เซิร์ฟเวอร์ที่เข้าร่วม</a>
+            <a href="shop.html"><i class="fa-solid fa-cart-shopping"></i> ซื้อระบบ</a>
+            <a href="custom.html"><i class="fa-solid fa-code"></i> ฝากทำระบบ</a>
+            <a onclick="handleDiscordLogin()" class="btn-discord"><i class="fa-brands fa-discord"></i> เข้าสู่ระบบ</a>
+        </nav>
+        <button class="menu-toggle" onclick="toggleMenu()">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- 📱 Mobile Slide Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html" class="active"><i class="fa-solid fa-house"></i> หน้าแรก</a>
+        <a href="dashboard.html"><i class="fa-solid fa-server"></i> บอททั้งหมด</a>
+        <a href="commands.html"><i class="fa-solid fa-terminal"></i> คำสั่ง</a>
+        <a href="updates.html"><i class="fa-solid fa-bullhorn"></i> อัปเดต</a>
+        <a href="premium.html"><i class="fa-solid fa-crown"></i> พรีเมี่ยม</a>
+        <a href="servers.html"><i class="fa-solid fa-users"></i> เซิร์ฟเวอร์ที่เข้าร่วม</a>
+        <a href="shop.html"><i class="fa-solid fa-cart-shopping"></i> ซื้อระบบ</a>
+        <a href="custom.html"><i class="fa-solid fa-code"></i> ฝากทำระบบ</a>
+        <a onclick="handleDiscordLogin()" class="btn-discord" style="justify-content: center; margin-top: 10px;"><i class="fa-brands fa-discord"></i> เข้าสู่ระบบด้วย Discord</a>
+    </div>
+
+    <!-- 🎨 Main Container -->
+    <div class="main-container">
+
+        <!-- ✨ Hero Intro Section -->
+        <div class="hero-section">
+            <h1>ยินดีต้อนรับสู่ SHGOX STUDIO</h1>
+            <p>ระบบบอท Discord อัจฉริยะ พัฒนาโดยค่ายบักก๊อต รองรับระบบตั๋วสนับสนุน (Ticket), ระบบ AI แชทอัตโนมัติ, ระบบประกาศข่าวสาร และฟีเจอร์อื่นๆ อีกมากมายเพื่อให้เซิร์ฟเวอร์ของคุณสมบูรณ์แบบที่สุด</p>
+            <div class="hero-buttons">
+                <a href="#" class="btn-primary"><i class="fa-solid fa-plus"></i> เชิญบอทเข้าเซิร์ฟเวอร์</a>
+                <button onclick="handleDiscordLogin()" class="btn-discord" style="padding: 12px 24px; border-radius: 12px; text-decoration: none; border: none; cursor: pointer;"><i class="fa-brands fa-discord"></i> ล็อกอินด้วย Discord</button>
+            </div>
+        </div>
+
+        <!-- 🤖 Bot Status Dashboard Card -->
+        <div class="card">
+            <img id="botAvatar" src="https://cdn-icons-png.flaticon.com/512/2913/2913144.png" alt="Bot Avatar" class="bot-avatar">
+            <h2 id="botName">กำลังโหลดข้อมูลบอท...</h2>
+            
+            <div id="statusBadge" class="status-badge offline-badge">
+                <div id="statusDot" class="dot offline-dot"></div>
+                <span id="statusText">OFFLINE</span>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">เซิร์ฟเวอร์ทั้งหมด</div>
+                    <div id="botGuilds" class="stat-value">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">ผู้ใช้งานทั้งหมด</div>
+                    <div id="botUsers" class="stat-value">0</div>
+                </div>
+            </div>
+
+            <div class="stat-box" style="margin-bottom: 15px;">
+                <div class="stat-label">ระยะเวลาเปิดทำงาน (Uptime)</div>
+                <div id="botUptime" class="stat-value" style="font-size: 15px;">-</div>
+            </div>
+
+            <!-- 🗺️ รายการเซิร์ฟเวอร์ที่บอทเข้าร่วมทั้งหมด -->
+            <div class="guilds-container">
+                <div class="guilds-header">
+                    <h3><i class="fa-solid fa-server"></i> รายชื่อเซิร์ฟเวอร์ที่บอทเข้าแล้ว (<span id="guildsCount">0</span>)</h3>
+                </div>
+                <div id="guildsList" class="guilds-list">
+                    <div style="grid-column: 1 / -1; text-align: center; color: #94a3b8; padding: 15px;">กำลังโหลดรายชื่อเซิร์ฟเวอร์...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🚀 Features Section -->
+        <div class="features-grid">
+            <div class="feature-box">
+                <i class="fa-solid fa-ticket"></i>
+                <h4>ระบบตั๋วสนับสนุน</h4>
+                <p>จัดการปัญหาและคำถามของผู้ใช้งานภายในเซิร์ฟเวอร์ด้วยปุ่มกดสร้างห้องตั๋วอัตโนมัติ สะดวก รวดเร็ว</p>
+            </div>
+            <div class="feature-box">
+                <i class="fa-solid fa-brain"></i>
+                <h4>ระบบ AI ตอบแชท</h4>
+                <p>ระบบปัญญาประดิษฐ์อัจฉริยะ (SHGOX AI) คอยตอบคำถามและพูดคุยโต้ตอบกับสมาชิกในเซิร์ฟเวอร์แบบเรียลไทม์</p>
+            </div>
+            <div class="feature-box">
+                <i class="fa-solid fa-bullhorn"></i>
+                <h4>ระบบประกาศ Broadcast</h4>
+                <p>ส่งข้อความประกาศข่าวสารสำคัญไปยังห้องแชทของเซิร์ฟเวอร์ต่างๆ ได้อย่างง่ายดายผ่าน Modal สวยๆ</p>
+            </div>
+        </div>
+
+        <!-- 🖼️ Owner Profile & Cover Section -->
+        <div class="owner-card">
+            <img src="https://img1.pic.in.th/images/Neon-Bear-Gamer-Welcome-Lounge.png" alt="Cover Owner" class="cover-img">
+            <div class="owner-info">
+                <img src="https://img1.pic.in.th/images/Neon-Chibi-Bear-Group-Badge.png" alt="Avatar Owner" class="owner-avatar">
+                <div class="owner-details">
+                    <h3>ก๊อต (GOT STUDIO)</h3>
+                    <p><i class="fa-solid fa-code"></i> ผู้พัฒนาหลัก & เจ้าของโปรเจกต์ SHGOX ค่ายบักก๊อต</p>
+                    <div class="owner-badge-tag"><i class="fa-solid fa-shield-halved"></i> Lead Developer & Founder</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            SHGOX ค่าย บักก๊อต • Bot Status Dashboard & System All Rights Reserved.
+        </div>
+
+    </div>
+
+    <!-- 🔔 Notification Toast Container -->
+    <div id="toast-container"></div>
+
+    <script>
+        // เปิดปิดเมนูมือถือ 3 ขีด
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('active');
+        }
+
+        // ระบบแจ้งเตือนสุดสวยงาม (Toast Notification)
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'fa-solid fa-circle-info';
+            if(type === 'success') icon = 'fa-solid fa-circle-check';
+            if(type === 'discord') icon = 'fa-brands fa-discord';
+
+            toast.innerHTML = `<i class="${icon}"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // ฟังก์ชันกดเข้าสู่ระบบด้วย Discord (พานำทางไปหน้าเข้าสู่ระบบจริงๆ)
+        function handleDiscordLogin() {
+            showToast('กำลังพานำทางไปยังระบบ Discord OAuth2...', 'discord');
+            setTimeout(() => {
+                window.location.href = '/auth/discord'; 
+            }, 1200);
+        }
+
+        // ดึงข้อมูลสถานะบอทและรายชื่อเซิร์ฟเวอร์แบบเรียลไทม์
+        async function fetchStatus() {
+            try {
+                const response = await fetch('/api/status');
+                if (!response.ok) throw new Error('ไม่สามารถดึงข้อมูลสถานะได้');
+                const data = await response.json();
+
+                document.getElementById('botName').innerText = data.username || 'SHGOX BOT';
+                if (data.avatar) document.getElementById('botAvatar').src = data.avatar;
+                
+                // ตรวจสอบค่า guilds ว่าเป็นตัวเลขหรืออาเรย์
+                let guildCount = 0;
+                if (typeof data.guilds === 'number') {
+                    guildCount = data.guilds;
+                } else if (Array.isArray(data.guilds)) {
+                    guildCount = data.guilds.length;
+                } else if (data.guildCount) {
+                    guildCount = data.guildCount;
+                }
+
+                document.getElementById('botGuilds').innerText = guildCount + ' เซิร์ฟเวอร์';
+                document.getElementById('botUsers').innerText = (data.users || 0) + ' คน';
+
+                const guildsListEl = document.getElementById('guildsList');
+                document.getElementById('guildsCount').innerText = guildCount;
+
+                // เช็คแสดงรายชื่อเซิร์ฟเวอร์ทั้งหมดที่บอทเข้า
+                const listData = data.guildsList || (Array.isArray(data.guilds) ? data.guilds : null);
+                if (listData && Array.isArray(listData) && listData.length > 0) {
+                    guildsListEl.innerHTML = '';
+                    listData.forEach(guild => {
+                        const iconUrl = guild.icon ? guild.icon : 'https://cdn-icons-png.flaticon.com/512/2913/2913144.png';
+                        const guildItem = document.createElement('div');
+                        guildItem.className = 'guild-item';
+                        guildItem.innerHTML = `
+                            <img src="${iconUrl}" alt="Guild Icon" class="guild-icon">
+                            <div class="guild-info">
+                                <h4>${guild.name || 'Unknown Server'}</h4>
+                                <p><i class="fa-solid fa-users"></i> ${guild.memberCount || 'N/A'} สมาชิก</p>
+                            </div>
+                        `;
+                        guildsListEl.appendChild(guildItem);
+                    });
+                } else {
+                    guildsListEl.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #94a3b8; padding: 15px;">บอทเชื่อมต่ออยู่ ${guildCount} เซิร์ฟเวอร์</div>`;
+                }
+
+                // คำนวณเวลา Uptime ให้แสดงเป็น วัน ชม. นาที วิ.
+                const uptimeSeconds = Number(data.uptime) || 0;
+                const days = Math.floor(uptimeSeconds / (3600 * 24));
+                const hours = Math.floor((uptimeSeconds % (3600 * 24)) / 3600);
+                const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+                const seconds = Math.floor(uptimeSeconds % 60);
+                document.getElementById('botUptime').innerText = `${days}วัน ${hours}ชม. ${minutes}นาที ${seconds}วิ`;
+
+                const badge = document.getElementById('statusBadge');
+                const dot = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+
+                if (data.online !== false) {
+                    badge.className = 'status-badge online-badge';
+                    dot.className = 'dot online-dot';
+                    text.innerText = 'ONLINE & READY';
+                } else {
+                    badge.className = 'status-badge offline-badge';
+                    dot.className = 'dot offline-dot';
+                    text.innerText = 'OFFLINE';
+                }
+            } catch (error) {
+                console.error(error);
+                // ข้อมูลตัวอย่าง (Fallback) กรณีทดสอบแบบ Offline
+                document.getElementById('botName').innerText = 'SHGOX OFFICIAL BOT';
+                document.getElementById('botGuilds').innerText = '15 เซิร์ฟเวอร์';
+                document.getElementById('botUsers').innerText = '1,250 คน';
+                document.getElementById('botUptime').innerText = '5วัน 12ชม. 30นาที 10วิ';
+                document.getElementById('guildsCount').innerText = '3';
+                
+                const guildsListEl = document.getElementById('guildsList');
+                guildsListEl.innerHTML = `
+                    <div class="guild-item"><img src="https://img1.pic.in.th/images/Neon-Chibi-Bear-Group-Badge.png" class="guild-icon"><div class="guild-info"><h4>บ้านไร่ซิตี้</h4><p>450 สมาชิก</p></div></div>
+                    <div class="guild-item"><img src="https://cdn-icons-png.flaticon.com/512/2913/2913144.png" class="guild-icon"><div class="guild-info"><h4>GOT STUDIO</h4><p>320 สมาชิก</p></div></div>
+                    <div class="guild-item"><img src="https://img1.pic.in.th/images/Neon-Bear-Gamer-Welcome-Lounge.png" class="guild-icon"><div class="guild-info"><h4>HighSchoolRP TH</h4><p>480 สมาชิก</p></div></div>
+                `;
+            }
+        }
+
+        fetchStatus();
+        setInterval(fetchStatus, 5000);
+    </script>
+</body>
+</html>

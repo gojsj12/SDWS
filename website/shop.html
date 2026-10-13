@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHGOX STUDIO - ซื้อระบบ & ร้านค้าสคริปต์</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Prompt', sans-serif;
+        }
+
+        body {
+            background-color: #0b0f19;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 50px;
+        }
+
+        /* 🌐 Top Navigation Bar */
+        header.navbar {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-brand {
+            font-size: 20px;
+            font-weight: 700;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 500;
+            padding: 7px 12px;
+            border-radius: 8px;
+            transition: all 0.25s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-discord {
+            background: #5865F2 !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            border: 1px solid #4752c4 !important;
+            box-shadow: 0 0 12px rgba(88, 101, 242, 0.4);
+        }
+
+        .btn-discord:hover {
+            background: #4752c4 !important;
+            box-shadow: 0 0 18px rgba(88, 101, 242, 0.7);
+        }
+
+        .menu-toggle {
+            display: none;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: #38bdf8;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* 📱 Mobile Slide Menu */
+        .mobile-menu {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            background: #0f172a;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 15px 20px;
+            gap: 8px;
+            position: sticky;
+            top: 60px;
+            z-index: 999;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+        }
+
+        .mobile-menu a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 12px 16px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+        }
+
+        .mobile-menu a:hover, .mobile-menu a.active {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        /* Main Container */
+        .container {
+            width: 100%;
+            max-width: 1150px;
+            padding: 30px 20px;
+        }
+
+        /* Shop Banner Header */
+        .shop-header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 35px 30px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+            margin-bottom: 35px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .shop-header h1 {
+            font-size: 28px;
+            color: #38bdf8;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .shop-header p {
+            font-size: 14.5px;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+
+        /* Products Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .product-card {
+            background: #111827;
+            border: 1px solid #1e293b;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s, border-color 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .product-card:hover {
+            transform: translateY(-6px);
+            border-color: #3b82f6;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.25);
+        }
+
+        .product-img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-bottom: 1px solid #1e293b;
+            background: #0f172a;
+        }
+
+        .product-content {
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex-grow: 1;
+        }
+
+        .product-badge {
+            align-self: flex-start;
+            background: rgba(56, 189, 248, 0.12);
+            color: #38bdf8;
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .product-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+
+        .product-desc {
+            font-size: 13.5px;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        .product-footer {
+            padding: 18px 22px;
+            background: #0f172a;
+            border-top: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .price-tag {
+            font-size: 20px;
+            font-weight: 700;
+            color: #38bdf8;
+        }
+
+        .price-tag span {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 400;
+        }
+
+        .btn-buy {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-buy:hover {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.7);
+            transform: translateY(-2px);
+        }
+
+        /* 🌟 Checkout Modal */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+
+        .custom-modal {
+            background: #111827; border: 1px solid #3b82f6; width: 90%; max-width: 480px;
+            padding: 30px; border-radius: 20px; text-align: left;
+            box-shadow: 0 0 35px rgba(59, 130, 246, 0.4);
+            animation: scaleUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-header-buy {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header-buy i { font-size: 45px; color: #38bdf8; margin-bottom: 10px; }
+        .modal-header-buy h3 { font-size: 20px; color: #f8fafc; font-weight: 700; }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; color: #cbd5e1; margin-bottom: 6px; font-weight: 500; }
+        .form-group input {
+            width: 100%; background: #0f172a; border: 1px solid #1e293b; padding: 11px 14px;
+            border-radius: 10px; color: #f8fafc; font-size: 13.5px; outline: none; transition: 0.3s;
+        }
+        .form-group input:focus { border-color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+
+        .modal-btn-confirm {
+            background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
+            padding: 12px; border-radius: 10px; font-size: 14.5px; font-weight: 600; cursor: pointer;
+            width: 100%; margin-top: 10px; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+        }
+        .modal-btn-confirm:hover { background: linear-gradient(135deg, #059669, #047857); }
+
+        .modal-btn-close {
+            background: #334155; color: #cbd5e1; border: none;
+            padding: 10px; border-radius: 10px; font-size: 13.5px; font-weight: 500; cursor: pointer;
+            width: 100%; margin-top: 8px;
+        }
+
+        @keyframes scaleUp {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            border-top: 1px solid #1e293b;
+            padding-top: 20px;
+            width: 100%;
+        }
+
+        @media (max-width: 1080px) {
+            .nav-links { display: none; }
+            .menu-toggle { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🌐 Navigation Bar -->
+    <header class="navbar">
+        <a href="dashboard.html" class="nav-brand">
+            <i class="fa-solid fa-robot"></i> SHGOX STUDIO
+        </a>
+        <nav class="nav-links">
+            <a href="dashboard.html"><i class="fa-solid fa-house"></i> หน้าแรก</a>
+            <a href="dashboard.html"><i class="fa-solid fa-server"></i> บอททั้งหมด</a>
+            <a href="commands.html"><i class="fa-solid fa-terminal"></i> คำสั่ง</a>
+            <a href="updates.html"><i class="fa-solid fa-bullhorn"></i> อัปเดต</a>
+            <a href="premium.html"><i class="fa-solid fa-crown"></i> พรีเมี่ยม</a>
+            <a href="servers.html"><i class="fa-solid fa-users"></i> เซิร์ฟเวอร์ที่เข้าร่วม</a>
+            <a href="shop.html" class="active"><i class="fa-solid fa-cart-shopping"></i> ซื้อระบบ</a>
+            <a href="custom.html"><i class="fa-solid fa-code"></i> ฝากทำระบบ</a>
+            <a onclick="handleDiscordLogin()" class="btn-discord"><i class="fa-brands fa-discord"></i> เข้าสู่ระบบ</a>
+        </nav>
+        <button class="menu-toggle" onclick="toggleMenu()">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- 📱 Mobile Slide Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="dashboard.html"><i class="fa-solid fa-house"></i> หน้าแรก</a>
+        <a href="dashboard.html"><i class="fa-solid fa-server"></i> บอททั้งหมด</a>
+        <a href="commands.html"><i class="fa-solid fa-terminal"></i> คำสั่ง</a>
+        <a href="updates.html"><i class="fa-solid fa-bullhorn"></i> อัปเดต</a>
+        <a href="premium.html"><i class="fa-solid fa-crown"></i> พรีเมี่ยม</a>
+        <a href="servers.html"><i class="fa-solid fa-users"></i> เซิร์ฟเวอร์ที่เข้าร่วม</a>
+        <a href="shop.html" class="active"><i class="fa-solid fa-cart-shopping"></i> ซื้อระบบ</a>
+        <a href="custom.html"><i class="fa-solid fa-code"></i> ฝากทำระบบ</a>
+        <a onclick="handleDiscordLogin()" class="btn-discord" style="justify-content: center; margin-top: 6px;"><i class="fa-brands fa-discord"></i> เข้าสู่ระบบด้วย Discord</a>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        
+        <!-- Shop Banner Header -->
+        <div class="shop-header">
+            <h1><i class="fa-solid fa-cart-shopping" style="color: #38bdf8;"></i> SHGOX SCRIPT & BOT STORE</h1>
+            <p>เลือกซื้อระบบสคริปต์และบอท Discord คุณภาพสูง พัฒนาโดย Master Siwakon (ค่ายบักก๊อต)</p>
+        </div>
+
+        <!-- Products Catalog Grid (ดึงข้อมูลจาก admin.html อัตโนมัติ) -->
+        <div class="products-grid" id="productsGrid">
+            <div style="grid-column: 1 / -1; text-align: center; color: #64748b; padding: 40px;">
+                กำลังโหลดรายการสินค้าจากหลังบ้าน...
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 🌟 Checkout Modal (ป๊อปอัปสั่งซื้อด้วยโค้ด พร้อมระบบเช็คคีย์จริง) -->
+    <div class="custom-modal-overlay" id="checkoutModal">
+        <div class="custom-modal">
+            <div class="modal-header-buy">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <h3 id="modalProductName">ชื่อสินค้า</h3>
+                <p style="font-size: 13px; color: #38bdf8; margin-top: 4px;" id="modalProductPrice">ราคา: 0 THB</p>
+            </div>
+
+            <form id="checkoutForm" onsubmit="handleCheckoutSubmit(event)">
+                <div class="form-group">
+                    <label><i class="fa-brands fa-discord"></i> ชื่อ Discord / User ID ของคุณ *</label>
+                    <input type="text" id="buyerDiscord" placeholder="เช่น got0219 หรือ Discord ID" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-key"></i> กรอกรหัสโค้ดซื้อสินค้า / โค้ดเติมเงินจริง *</label>
+                    <input type="text" id="buyerCode" placeholder="กรอกรหัส Token คีย์จากหลังบ้าน..." required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid Phone"></i> ช่องทางการติดต่อยืนยันสิทธิ์ (Line / Facebook)</label>
+                    <input type="text" id="buyerContact" placeholder="เช่น ลิงก์เฟสบุ๊ค หรือเบอร์โทร">
+                </div>
+
+                <button type="submit" class="modal-btn-confirm">
+                    <i class="fa-solid fa-circle-check"></i> ตรวจสอบคีย์และยืนยันการสั่งซื้อ
+                </button>
+                <button type="button" class="modal-btn-close" onclick="closeCheckoutModal()">ยกเลิก</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Status Notice -->
+    <div class="custom-modal-overlay" id="noticeModal">
+        <div class="custom-modal" style="text-align: center;">
+            <i class="fa-solid fa-circle-check" id="noticeIcon" style="font-size: 55px; color: #10b981; margin-bottom: 15px;"></i>
+            <h3 id="noticeTitle" style="color: #38bdf8;">สั่งซื้อสำเร็จเรียบร้อย!</h3>
+            <p id="noticeMessage" style="font-size: 13.5px; color: #cbd5e1; margin: 15px 0 25px; line-height: 1.6;"></p>
+            <button class="modal-btn-confirm" onclick="closeNoticeModal()">ตกลง</button>
+        </div>
+    </div>
+
+    <!-- Modal Discord Login -->
+    <div class="custom-modal-overlay" id="discordModal">
+        <div class="custom-modal" style="text-align: center;">
+            <i class="fa-brands fa-discord" style="font-size: 50px; color: #5865F2; margin-bottom: 15px;"></i>
+            <h3 style="color: #38bdf8;">กำลังพัฒนาระบบ</h3>
+            <p style="font-size: 13.5px; color: #94a3b8; margin-bottom: 25px;">ระบบเข้าสู่ระบบด้วย Discord กำลังอยู่ในระหว่างขั้นตอนพัฒนาโดย <b>Master Siwakon</b> เร็วๆ นี้เตรียมพบกันได้เลยครับ! 🚀</p>
+            <button class="modal-btn-confirm" onclick="closeDiscordModal()">เข้าใจแล้ว</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 SHGOX BOT System • พัฒนาโดย ก๊อต (Master Siwakon) ค่ายบักก๊อต</p>
+    </footer>
+
+    <!-- Script สำหรับดึงสินค้าจาก admin.html และตรวจสอบโค้ดจริง -->
+    <script>
+        let selectedProduct = '';
+        let selectedPrice = '';
+
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function handleDiscordLogin() {
+            document.getElementById('discordModal').style.display = 'flex';
+            document.getElementById('mobileMenu').style.display = 'none';
+        }
+
+        function closeDiscordModal() {
+            document.getElementById('discordModal').style.display = 'none';
+        }
+
+        // โหลดรายการสินค้าที่แอดมินตั้งค่าไว้จาก localStorage (เชื่อมโยงกับ admin.html)
+        function loadShopProducts() {
+            const data = localStorage.getItem('shgox_admin_products');
+            const products = data ? JSON.parse(data) : [
+                { name: 'SHGOX BOT FULL SYSTEM (v2.5)', price: '350 THB', desc: 'บอท Discord อัจฉริยะครบวงจร พร้อมระบบ AI และ Dashboard' },
+                { name: 'AI Dual-Engine Handler Script', price: '180 THB', desc: 'สคริปต์ AI แชทอัจฉริยะ พร้อมระบบสลับ Fallback API' }
+            ];
+
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '';
+
+            products.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <img src="https://img1.pic.in.th/images/Neon-Bear-Gamer-Welcome-Lounge.png" alt="Product Image" class="product-img">
+                    <div class="product-content">
+                        <span class="product-badge"><i class="fa-solid fa-code"></i> สคริปต์ / ระบบพร้อมใช้</span>
+                        <h3 class="product-title">${item.name}</h3>
+                        <p class="product-desc">${item.desc}</p>
+                    </div>
+                    <div class="product-footer">
+                        <div class="price-tag">${item.price}</div>
+                        <button class="btn-buy" onclick="openCheckoutModal('${item.name}', '${item.price}')">
+                            <i class="fa-solid fa-cart-plus"></i> สั่งซื้อ
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openCheckoutModal(pName, pPrice) {
+            selectedProduct = pName;
+            selectedPrice = pPrice;
+            document.getElementById('modalProductName').innerText = pName;
+            document.getElementById('modalProductPrice').innerText = `ราคา: ${pPrice}`;
+            document.getElementById('checkoutModal').style.display = 'flex';
+        }
+
+        function closeCheckoutModal() {
+            document.getElementById('checkoutModal').style.display = 'none';
+            document.getElementById('checkoutForm').reset();
+        }
+
+        function closeNoticeModal() {
+            document.getElementById('noticeModal').style.display = 'none';
+        }
+
+        // ระบบตรวจสอบคีย์จริงจากหลังบ้าน (localStorage tokens)
+        function handleCheckoutSubmit(event) {
+            event.preventDefault();
+
+            const buyerDiscord = document.getElementById('buyerDiscord').value.trim();
+            const buyerCode = document.getElementById('buyerCode').value.trim();
+
+            if (!buyerDiscord || !buyerCode) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วน!');
+                return;
+            }
+
+            // ดึงข้อมูล Token จากหลังบ้านแอดมิน (admin.html)
+            const tokensData = localStorage.getItem('shgox_admin_tokens');
+            let tokens = tokensData ? JSON.parse(tokensData) : [];
+
+            const tokenIndex = tokens.findIndex(t => t.code === buyerCode);
+
+            closeCheckoutModal();
+
+            const iconEl = document.getElementById('noticeIcon');
+            const titleEl = document.getElementById('noticeTitle');
+            const msgEl = document.getElementById('noticeMessage');
+
+            if (tokenIndex === -1) {
+                // ไม่พบรหัสคีย์
+                iconEl.className = 'fa-solid fa-circle-xmark';
+                iconEl.style.color = '#ef4444';
+                titleEl.innerText = '❌ คีย์ไม่ถูกต้อง!';
+                msgEl.innerHTML = `รหัสคีย์ <code>${buyerCode}</code> นี้ไม่พบในระบบฐานข้อมูลแอดมิน`;
+            } else if (tokens[tokenIndex].status === 'ใช้งานแล้ว') {
+                // คีย์ถูกใช้ไปแล้ว
+                iconEl.className = 'fa-solid fa-triangle-exclamation';
+                iconEl.style.color = '#f59e0b';
+                titleEl.innerText = '⚠️ คีย์นี้ถูกใช้งานไปแล้ว!';
+                msgEl.innerHTML = `รหัสคีย์ <code>${buyerCode}</code> นี้ถูกใช้งานไปก่อนหน้านี้แล้ว ไม่สามารถใช้ซ้ำได้`;
+            } else {
+                // คีย์ถูกต้อง -> อัปเดตสถานะเป็นใช้งานแล้วทันที
+                tokens[tokenIndex].status = 'ใช้งานแล้ว (ซื้อสินค้า: ' + selectedProduct + ')';
+                localStorage.setItem('shgox_admin_tokens', JSON.stringify(tokens));
+
+                iconEl.className = 'fa-solid fa-circle-check';
+                iconEl.style.color = '#10b981';
+                titleEl.innerText = '🎉 สั่งซื้อสำเร็จเรียบร้อย!';
+                msgEl.innerHTML = `
+                    ขอบคุณครับคุณ <b>${buyerDiscord}</b>!<br>
+                    ระบบได้ตรวจสอบคีย์ <code>${buyerCode}</code> สำเร็จ<br>
+                    ได้รับสิทธิ์สินค้า: <b>${selectedProduct} (${selectedPrice})</b> เรียบร้อยแล้ว!<br><br>
+                    แอดมินกำลังจัดส่งไฟล์ระบบให้ทาง Discord ของคุณครับ!
+                `;
+            }
+
+            document.getElementById('noticeModal').style.display = 'flex';
+        }
+
+        // โหลดสินค้าเมื่อเปิดหน้าเว็บ
+        loadShopProducts();
+    </script>
+</body>
+</html>

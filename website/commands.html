@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHGOX BOT - คำสั่งทั้งหมด</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Prompt', sans-serif;
+        }
+
+        body {
+            background-color: #0b0f19;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 50px;
+        }
+
+        /* 🌐 Top Navigation Bar */
+        header.navbar {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-brand {
+            font-size: 20px;
+            font-weight: 700;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 500;
+            padding: 7px 12px;
+            border-radius: 8px;
+            transition: all 0.25s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-discord {
+            background: #5865F2 !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            border: 1px solid #4752c4 !important;
+            box-shadow: 0 0 12px rgba(88, 101, 242, 0.4);
+        }
+
+        .btn-discord:hover {
+            background: #4752c4 !important;
+            box-shadow: 0 0 18px rgba(88, 101, 242, 0.7);
+        }
+
+        .menu-toggle {
+            display: none;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: #38bdf8;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* 📱 Mobile Slide Menu */
+        .mobile-menu {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            background: #0f172a;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 15px 20px;
+            gap: 8px;
+            position: sticky;
+            top: 60px;
+            z-index: 999;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+        }
+
+        .mobile-menu a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 12px 16px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+        }
+
+        .mobile-menu a:hover, .mobile-menu a.active {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        /* Main Container */
+        .container {
+            width: 100%;
+            max-width: 1150px;
+            padding: 30px 20px;
+        }
+
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 30px 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .page-title h1 {
+            font-size: 26px;
+            color: #38bdf8;
+            font-weight: 700;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-title p {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        /* Search Bar */
+        .search-box {
+            position: relative;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .search-box input {
+            width: 100%;
+            background: #111827;
+            border: 1px solid #1e293b;
+            padding: 12px 18px 12px 42px;
+            border-radius: 12px;
+            color: #f8fafc;
+            font-size: 14px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        /* Commands Grid */
+        .commands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .command-card {
+            background: #111827;
+            border: 1px solid #1e293b;
+            padding: 22px 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, border-color 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .command-card:hover {
+            transform: translateY(-5px);
+            border-color: #3b82f6;
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+        }
+
+        .command-name {
+            font-size: 17px;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .command-desc {
+            font-size: 13.5px;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        .command-tag {
+            align-self: flex-start;
+            margin-top: 15px;
+            background: rgba(59, 130, 246, 0.1);
+            color: #60a5fa;
+            font-size: 11.5px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        /* Empty state */
+        .no-commands {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 50px;
+            color: #64748b;
+            font-size: 15px;
+        }
+
+        /* Modal Popup */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+        .custom-modal {
+            background: #111827; border: 1px solid #3b82f6; width: 90%; max-width: 420px;
+            padding: 30px; border-radius: 20px; text-align: center;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+        }
+        .custom-modal i.modal-icon { font-size: 50px; color: #5865F2; margin-bottom: 15px; }
+        .custom-modal h3 { font-size: 20px; color: #38bdf8; margin-bottom: 10px; }
+        .custom-modal p { font-size: 14px; color: #94a3b8; margin-bottom: 25px; line-height: 1.6; }
+        .modal-btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none;
+            padding: 10px 25px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            border-top: 1px solid #1e293b;
+            padding-top: 20px;
+            width: 100%;
+        }
+
+        @media (max-width: 1080px) {
+            .nav-links { display: none; }
+            .menu-toggle { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🌐 Navigation Bar -->
+    <header class="navbar">
+        <a href="dashboard.html" class="nav-brand">
+            <i class="fa-solid fa-robot"></i> SHGOX STUDIO
+        </a>
+        <nav class="nav-links">
+            <a href="dashboard.html"><i class="fa-solid fa-house"></i> หน้าแรก</a>
+            <a href="dashboard.html"><i class="fa-solid fa-server"></i> บอททั้งหมด</a>
+            <a href="commands.html" class="active"><i class="fa-solid fa-terminal"></i> คำสั่ง</a>
+            <a href="updates.html"><i class="fa-solid fa-bullhorn"></i> อัปเดต</a>
+            <a href="premium.html"><i class="fa-solid fa-crown"></i> พรีเมี่ยม</a>
+            <a href="servers.html"><i class="fa-solid fa-users"></i> เซิร์ฟเวอร์ที่เข้าร่วม</a>
+            <a href="shop.html"><i class="fa-solid fa-cart-shopping"></i> ซื้อระบบ</a>
+            <a href="custom.html"><i class="fa-solid fa-code"></i> ฝากทำระบบ</a>
+            <a onclick="handleDiscordLogin()" class="btn-discord"><i class="fa-brands fa-discord"></i> เข้าสู่ระบบ</a>
+        </nav>
+        <button class="menu-toggle" onclick="toggleMenu()">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- 📱 Mobile Slide Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="dashboard.html"><i class="fa-solid fa-house"></i> หน้าแรก</a>
+        <a href="dashboard.html"><i class="fa-solid fa-server"></i> บอททั้งหมด</a>
+        <a href="commands.html" class="active"><i class="fa-solid fa-terminal"></i> คำสั่ง</a>
+        <a href="updates.html"><i class="fa-solid fa-bullhorn"></i> อัปเดต</a>
+        <a href="premium.html"><i class="fa-solid fa-crown"></i> พรีเมี่ยม</a>
+        <a href="servers.html"><i class="fa-solid fa-users"></i> เซิร์ฟเวอร์ที่เข้าร่วม</a>
+        <a href="shop.html"><i class="fa-solid fa-cart-shopping"></i> ซื้อระบบ</a>
+        <a href="custom.html"><i class="fa-solid fa-code"></i> ฝากทำระบบ</a>
+        <a onclick="handleDiscordLogin()" class="btn-discord" style="justify-content: center; margin-top: 6px;"><i class="fa-brands fa-discord"></i> เข้าสู่ระบบด้วย Discord</a>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-title">
+                <h1><i class="fa-solid fa-terminal"></i> รายการคำสั่งบอททั้งหมด</h1>
+                <p>ค้นหาและดูรายละเอียด Slash Commands ของบอท SHGOX ที่โหลดจากระบบจริง</p>
+            </div>
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="ค้นหาชื่อคำสั่ง..." onkeyup="filterCommands()">
+            </div>
+        </div>
+
+        <!-- Commands Grid -->
+        <div class="commands-grid" id="commandsContainer">
+            <div class="no-commands">กำลังโหลดรายการคำสั่งจากระบบ...</div>
+        </div>
+    </div>
+
+    <!-- 🌟 Custom Neon Modal Popup -->
+    <div class="custom-modal-overlay" id="discordModal">
+        <div class="custom-modal">
+            <i class="fa-brands fa-discord modal-icon"></i>
+            <h3>กำลังพัฒนาระบบ</h3>
+            <p>ระบบเข้าสู่ระบบด้วย Discord กำลังอยู่ในระหว่างขั้นตอนพัฒนาโดย <b>Master Siwakon</b> เร็วๆ นี้เตรียมพบกันได้เลยครับ! 🚀</p>
+            <button class="modal-btn" onclick="closeDiscordModal()">เข้าใจแล้ว</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 SHGOX BOT System • พัฒนาโดย ก๊อต (Master Siwakon) ค่ายบักก๊อต</p>
+    </footer>
+
+    <!-- Script สำหรับดึงข้อมูลคำสั่งและระบบค้นหา -->
+    <script>
+        let allCommands = [];
+
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function handleDiscordLogin() {
+            document.getElementById('discordModal').style.display = 'flex';
+            document.getElementById('mobileMenu').style.display = 'none';
+        }
+
+        function closeDiscordModal() {
+            document.getElementById('discordModal').style.display = 'none';
+        }
+
+        // ดึงรายการคำสั่งจาก API ฝั่งบอท
+        async function fetchCommands() {
+            try {
+                const response = await fetch('/api/commands');
+                const data = await response.json();
+
+                if (data.success) {
+                    allCommands = data.commands;
+                    renderCommands(allCommands);
+                } else {
+                    document.getElementById('commandsContainer').innerHTML = '<div class="no-commands">ไม่สามารถโหลดรายการคำสั่งได้</div>';
+                }
+            } catch (error) {
+                console.error('Failed to fetch commands:', error);
+                document.getElementById('commandsContainer').innerHTML = '<div class="no-commands">เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์บอท</div>';
+            }
+        }
+
+        // เรนเดอร์การ์ดคำสั่งลงหน้าเว็บ
+        function renderCommands(commands) {
+            const container = document.getElementById('commandsContainer');
+            container.innerHTML = '';
+
+            if (commands.length === 0) {
+                container.innerHTML = '<div class="no-commands"><i class="fa-solid fa-triangle-exclamation" style="font-size: 24px; margin-bottom: 10px; display: block; color: #f59e0b;"></i>ไม่พบคำสั่งที่ค้นหา</div>';
+                return;
+            }
+
+            commands.forEach(cmd => {
+                const card = document.createElement('div');
+                card.className = 'command-card';
+                card.innerHTML = `
+                    <div>
+                        <div class="command-name"><i class="fa-solid fa-hashtag" style="color: #60a5fa;"></i> /${cmd.name}</div>
+                        <div class="command-desc">${cmd.description}</div>
+                    </div>
+                    <span class="command-tag"><i class="fa-solid fa-bolt"></i> Slash Command</span>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ฟังก์ชันค้นหาคำสั่งแบบเรียลไทม์
+        function filterCommands() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allCommands.filter(cmd => 
+                cmd.name.toLowerCase().includes(keyword) || 
+                cmd.description.toLowerCase().includes(keyword)
+            );
+            renderCommands(filtered);
+        }
+
+        // โหลดข้อมูลเมื่อเปิดหน้าเว็บ
+        fetchCommands();
+    </script>
+</body>
+</html>

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHGOX BOT - เซิร์ฟเวอร์ที่เข้าร่วมทั้งหมด</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Prompt', sans-serif;
+        }
+
+        body {
+            background-color: #0b0f19;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 50px;
+        }
+
+        /* 🌐 Top Navigation Bar */
+        header.navbar {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-brand {
+            font-size: 20px;
+            font-weight: 700;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 500;
+            padding: 7px 12px;
+            border-radius: 8px;
+            transition: all 0.25s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-discord {
+            background: #5865F2 !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            border: 1px solid #4752c4 !important;
+            box-shadow: 0 0 12px rgba(88, 101, 242, 0.4);
+        }
+
+        .btn-discord:hover {
+            background: #4752c4 !important;
+            box-shadow: 0 0 18px rgba(88, 101, 242, 0.7);
+        }
+
+        .menu-toggle {
+            display: none;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: #38bdf8;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* 📱 Mobile Slide Menu */
+        .mobile-menu {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            background: #0f172a;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 15px 20px;
+            gap: 8px;
+            position: sticky;
+            top: 60px;
+            z-index: 999;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+        }
+
+        .mobile-menu a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 12px 16px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+        }
+
+        .mobile-menu a:hover, .mobile-menu a.active {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        /* Main Container */
+        .container {
+            width: 100%;
+            max-width: 1150px;
+            padding: 30px 20px;
+        }
+
+        /* Official Discord Guild Banner */
+        .official-guild-card {
+            background: linear-gradient(135deg, #1e1b4b, #0f172a);
+            border: 1px solid rgba(88, 101, 242, 0.5);
+            padding: 30px 35px;
+            border-radius: 24px;
+            box-shadow: 0 10px 35px rgba(88, 101, 242, 0.25);
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .official-guild-card::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(88, 101, 242, 0.15) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .official-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .official-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            border: 3px solid #5865F2;
+            box-shadow: 0 0 20px rgba(88, 101, 242, 0.6);
+            object-fit: cover;
+        }
+
+        .official-details h2 {
+            font-size: 24px;
+            color: #ffffff;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .official-details p {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .btn-join-official {
+            background: #5865F2;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 0 20px rgba(88, 101, 242, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .btn-join-official:hover {
+            background: #4752c4;
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(88, 101, 242, 0.8);
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 20px;
+            color: #38bdf8;
+            font-weight: 700;
+            margin-bottom: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* Guilds Grid */
+        .guilds-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 20px;
+        }
+
+        .guild-card {
+            background: #111827;
+            border: 1px solid #1e293b;
+            padding: 20px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .guild-card:hover {
+            transform: translateY(-4px);
+            border-color: #3b82f6;
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+        }
+
+        .guild-card img {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            object-fit: cover;
+        }
+
+        .guild-info h4 {
+            font-size: 15.5px;
+            color: #f8fafc;
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 160px;
+        }
+
+        .guild-info span {
+            font-size: 12.5px;
+            color: #34d399;
+            background: rgba(52, 211, 153, 0.12);
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(52, 211, 153, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Empty / Loading State */
+        .loading-text {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 50px;
+            color: #64748b;
+            font-size: 15px;
+        }
+
+        /* Custom Neon Modal Popup */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+        .custom-modal {
+            background: #111827; border: 1px solid #3b82f6; width: 90%; max-width: 420px;
+            padding: 30px; border-radius: 20px; text-align: center;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+        }
+        .custom-modal i.modal-icon { font-size: 50px; color: #5865F2; margin-bottom: 15px; }
+        .custom-modal h3 { font-size: 20px; color: #38bdf8; margin-bottom: 10px; }
+        .custom-modal p { font-size: 14px; color: #94a3b8; margin-bottom: 25px; line-height: 1.6; }
+        .modal-btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none;
+            padding: 10px 25px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            border-top: 1px solid #1e293b;
+            padding-top: 20px;
+            width: 100%;
+        }
+
+        @media (max-width: 1080px) {
+            .nav-links { display: none; }
+            .menu-toggle { display: block; }
+            .official-guild-card { flex-direction: column; text-align: center; }
+            .official-info { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🌐 Navigation Bar -->
+    <header class="navbar">
+        <a href="dashboard.html" class="nav-brand">
+            <i class="fa-solid fa-robot"></i> SHGOX STUDIO
+        </a>
+        <nav class="nav-links">
+            <a href="dashboard.html"><i class="fa-solid fa-house"></i> หน้าแรก</a>
+            <a href="dashboard.html"><i class="fa-solid fa-server"></i> บอททั้งหมด</a>
+            <a href="commands.html"><i class="fa-solid fa-terminal"></i> คำสั่ง</a>
+            <a href="updates.html"><i class="fa-solid fa-bullhorn"></i> อัปเดต</a>
+            <a href="premium.html"><i class="fa-solid fa-crown"></i> พรีเมี่ยม</a>
+            <a href="servers.html" class="active"><i class="fa-solid fa-users"></i> เซิร์ฟเวอร์ที่เข้าร่วม</a>
+            <a href="shop.html"><i class="fa-solid fa-cart-shopping"></i> ซื้อระบบ</a>
+            <a href="custom.html"><i class="fa-solid fa-code"></i> ฝากทำระบบ</a>
+            <a onclick="handleDiscordLogin()" class="btn-discord"><i class="fa-brands fa-discord"></i> เข้าสู่ระบบ</a>
+        </nav>
+        <button class="menu-toggle" onclick="toggleMenu()">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- 📱 Mobile Slide Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="dashboard.html"><i class="fa-solid fa-house"></i> หน้าแรก</a>
+        <a href="dashboard.html"><i class="fa-solid fa-server"></i> บอททั้งหมด</a>
+        <a href="commands.html"><i class="fa-solid fa-terminal"></i> คำสั่ง</a>
+        <a href="updates.html"><i class="fa-solid fa-bullhorn"></i> อัปเดต</a>
+        <a href="premium.html"><i class="fa-solid fa-crown"></i> พรีเมี่ยม</a>
+        <a href="servers.html" class="active"><i class="fa-solid fa-users"></i> เซิร์ฟเวอร์ที่เข้าร่วม</a>
+        <a href="shop.html"><i class="fa-solid fa-cart-shopping"></i> ซื้อระบบ</a>
+        <a href="custom.html"><i class="fa-solid fa-code"></i> ฝากทำระบบ</a>
+        <a onclick="handleDiscordLogin()" class="btn-discord" style="justify-content: center; margin-top: 6px;"><i class="fa-brands fa-discord"></i> เข้าสู่ระบบด้วย Discord</a>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        
+        <!-- Official Community Server Banner -->
+        <div class="official-guild-card">
+            <div class="official-info">
+                <img src="https://img1.pic.in.th/images/Neon-Chibi-Bear-Group-Badge.png" alt="SHGOX Official Icon" class="official-icon">
+                <div class="official-details">
+                    <h2><i class="fa-solid fa-shield-cat" style="color: #38bdf8;"></i> SHGOX Official Community</h2>
+                    <p>เซิร์ฟเวอร์ดิสคอร์ดหลัก พูดคุย แลกเปลี่ยน แนะนำการใช้งาน และรับข่าวสารจากค่ายบักก๊อต</p>
+                </div>
+            </div>
+            <a href="https://discord.gg/XKkdFX7cx" target="_blank" class="btn-join-official">
+                <i class="fa-brands fa-discord"></i> เข้าร่วมดิสคอร์ดหลัก
+            </a>
+        </div>
+
+        <!-- Section Title & Counter -->
+        <div class="section-title">
+            <span><i class="fa-solid fa-network-wired"></i> เซิร์ฟเวอร์ทั้งหมดที่บอทประจำการอยู่</span>
+            <span style="font-size: 14px; color: #94a3b8; font-weight: 400;" id="totalGuildsCount">กำลังโหลดจำนวนเซิร์ฟเวอร์...</span>
+        </div>
+
+        <!-- Guilds Grid -->
+        <div class="guilds-grid" id="guildsGrid">
+            <div class="loading-text">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #38bdf8; margin-bottom: 10px; display: block;"></i>
+                กำลังดึงข้อมูลเซิร์ฟเวอร์เรียลไทม์...
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 🌟 Custom Neon Modal Popup -->
+    <div class="custom-modal-overlay" id="discordModal">
+        <div class="custom-modal">
+            <i class="fa-brands fa-discord modal-icon"></i>
+            <h3>กำลังพัฒนาระบบ</h3>
+            <p>ระบบเข้าสู่ระบบด้วย Discord กำลังอยู่ในระหว่างขั้นตอนพัฒนาโดย <b>Master Siwakon</b> เร็วๆ นี้เตรียมพบกันได้เลยครับ! 🚀</p>
+            <button class="modal-btn" onclick="closeDiscordModal()">เข้าใจแล้ว</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 SHGOX BOT System • พัฒนาโดย ก๊อต (Master Siwakon) ค่ายบักก๊อต</p>
+    </footer>
+
+    <!-- Script สำหรับดึงข้อมูลเซิร์ฟเวอร์สดจาก API /api/status -->
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function handleDiscordLogin() {
+            document.getElementById('discordModal').style.display = 'flex';
+            document.getElementById('mobileMenu').style.display = 'none';
+        }
+
+        function closeDiscordModal() {
+            document.getElementById('discordModal').style.display = 'none';
+        }
+
+        async function fetchServersList() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+
+                const guildsGrid = document.getElementById('guildsGrid');
+                const totalGuildsCount = document.getElementById('totalGuildsCount');
+
+                if (data.online && data.guildsList) {
+                    totalGuildsCount.innerText = `รวมทั้งหมด ${data.guilds} เซิร์ฟเวอร์ (${data.users.toLocaleString()} สมาชิก)`;
+                    guildsGrid.innerHTML = '';
+
+                    if (data.guildsList.length === 0) {
+                        guildsGrid.innerHTML = '<div class="loading-text">ไม่พบข้อมูลเซิร์ฟเวอร์</div>';
+                        return;
+                    }
+
+                    data.guildsList.forEach(guild => {
+                        const card = document.createElement('div');
+                        card.className = 'guild-card';
+                        card.innerHTML = `
+                            <img src="${guild.icon}" alt="${guild.name} Icon">
+                            <div class="guild-info">
+                                <h4>${guild.name}</h4>
+                                <span><i class="fa-solid fa-users"></i> ${guild.memberCount.toLocaleString()} สมาชิก</span>
+                            </div>
+                        `;
+                        guildsGrid.appendChild(card);
+                    });
+                } else {
+                    guildsGrid.innerHTML = '<div class="loading-text" style="color: #ef4444;">ไม่สามารถดึงข้อมูลเซิร์ฟเวอร์ได้ (บอทอาจจะออฟไลน์อยู่)</div>';
+                }
+            } catch (error) {
+                console.error('Error fetching servers:', error);
+                document.getElementById('guildsGrid').innerHTML = '<div class="loading-text" style="color: #ef4444;">เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์บอท</div>';
+            }
+        }
+
+        // โหลดข้อมูลเมื่อเปิดหน้าเว็บ และอัปเดตอัตโนมัติทุกๆ 5 วินาที
+        fetchServersList();
+        setInterval(fetchServersList, 5000);
+    </script>
+</body>
+</html>

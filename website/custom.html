@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHGOX STUDIO - ฝากทำระบบ & สั่งทำสคริปต์</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Prompt', sans-serif;
+        }
+
+        body {
+            background-color: #0b0f19;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 50px;
+        }
+
+        /* 🌐 Top Navigation Bar */
+        header.navbar {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-brand {
+            font-size: 20px;
+            font-weight: 700;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 500;
+            padding: 7px 12px;
+            border-radius: 8px;
+            transition: all 0.25s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-discord {
+            background: #5865F2 !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            border: 1px solid #4752c4 !important;
+            box-shadow: 0 0 12px rgba(88, 101, 242, 0.4);
+        }
+
+        .btn-discord:hover {
+            background: #4752c4 !important;
+            box-shadow: 0 0 18px rgba(88, 101, 242, 0.7);
+        }
+
+        .menu-toggle {
+            display: none;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: #38bdf8;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* 📱 Mobile Slide Menu */
+        .mobile-menu {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            background: #0f172a;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 15px 20px;
+            gap: 8px;
+            position: sticky;
+            top: 60px;
+            z-index: 999;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+        }
+
+        .mobile-menu a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 12px 16px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+        }
+
+        .mobile-menu a:hover, .mobile-menu a.active {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        /* Main Container */
+        .container {
+            width: 100%;
+            max-width: 1150px;
+            padding: 30px 20px;
+        }
+
+        /* Page Banner Header */
+        .custom-header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 35px 30px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+            margin-bottom: 35px;
+            text-align: center;
+        }
+
+        .custom-header h1 {
+            font-size: 28px;
+            color: #38bdf8;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .custom-header p {
+            font-size: 14.5px;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+
+        /* Layout Grid: Left Form / Right Comment Board */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 30px;
+        }
+
+        /* Form Box */
+        .form-card {
+            background: #111827;
+            border: 1px solid #1e293b;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            height: fit-content;
+        }
+
+        .form-card h2 {
+            font-size: 20px;
+            color: #38bdf8;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-card p.subtitle {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 22px;
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #cbd5e1;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            padding: 12px 15px;
+            border-radius: 10px;
+            color: #f8fafc;
+            font-size: 13.5px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 13px;
+            border-radius: 10px;
+            font-size: 14.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            box-shadow: 0 0 22px rgba(59, 130, 246, 0.7);
+        }
+
+        /* Public Live Board Box */
+        .board-card {
+            background: #111827;
+            border: 1px solid #1e293b;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .board-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 12px;
+        }
+
+        .board-header h2 {
+            font-size: 20px;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .comments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .comment-item {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            padding: 18px;
+            border-radius: 14px;
+            transition: 0.25s;
+        }
+
+        .comment-item:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        .comment-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .comment-author {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comment-time {
+            font-size: 11.5px;
+            color: #64748b;
+        }
+
+        .comment-meta {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge-system {
+            font-size: 11px;
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .badge-budget {
+            font-size: 11px;
+            background: rgba(52, 211, 153, 0.15);
+            color: #34d399;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+
+        .comment-text {
+            font-size: 13.5px;
+            color: #cbd5e1;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+
+        .status-tag {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #fbbf24;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .no-comments {
+            text-align: center;
+            color: #64748b;
+            padding: 40px 0;
+            font-size: 14px;
+        }
+
+        /* Modal Discord Login */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+
+        .custom-modal {
+            background: #111827; border: 1px solid #3b82f6; width: 90%; max-width: 420px;
+            padding: 30px; border-radius: 20px; text-align: center;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            border-top: 1px solid #1e293b;
+            padding-top: 20px;
+            width: 100%;
+        }
+
+        @media (max-width: 960px) {
+            .nav-links { display: none; }
+            .menu-toggle { display: block; }
+            .content-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🌐 Navigation Bar -->
+    <header class="navbar">
+        <a href="dashboard.html" class="nav-brand">
+            <i class="fa-solid fa-robot"></i> SHGOX STUDIO
+        </a>
+        <nav class="nav-links">
+            <a href="dashboard.html"><i class="fa-solid fa-house"></i> หน้าแรก</a>
+            <a href="dashboard.html"><i class="fa-solid fa-server"></i> บอททั้งหมด</a>
+            <a href="commands.html"><i class="fa-solid fa-terminal"></i> คำสั่ง</a>
+            <a href="updates.html"><i class="fa-solid fa-bullhorn"></i> อัปเดต</a>
+            <a href="premium.html"><i class="fa-solid fa-crown"></i> พรีเมี่ยม</a>
+            <a href="servers.html"><i class="fa-solid fa-users"></i> เซิร์ฟเวอร์ที่เข้าร่วม</a>
+            <a href="shop.html"><i class="fa-solid fa-cart-shopping"></i> ซื้อระบบ</a>
+            <a href="custom.html" class="active"><i class="fa-solid fa-code"></i> ฝากทำระบบ</a>
+            <a onclick="handleDiscordLogin()" class="btn-discord"><i class="fa-brands fa-discord"></i> เข้าสู่ระบบ</a>
+        </nav>
+        <button class="menu-toggle" onclick="toggleMenu()">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- 📱 Mobile Slide Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="dashboard.html"><i class="fa-solid fa-house"></i> หน้าแรก</a>
+        <a href="dashboard.html"><i class="fa-solid fa-server"></i> บอททั้งหมด</a>
+        <a href="commands.html"><i class="fa-solid fa-terminal"></i> คำสั่ง</a>
+        <a href="updates.html"><i class="fa-solid fa-bullhorn"></i> อัปเดต</a>
+        <a href="premium.html"><i class="fa-solid fa-crown"></i> พรีเมี่ยม</a>
+        <a href="servers.html"><i class="fa-solid fa-users"></i> เซิร์ฟเวอร์ที่เข้าร่วม</a>
+        <a href="shop.html"><i class="fa-solid fa-cart-shopping"></i> ซื้อระบบ</a>
+        <a href="custom.html" class="active"><i class="fa-solid fa-code"></i> ฝากทำระบบ</a>
+        <a onclick="handleDiscordLogin()" class="btn-discord" style="justify-content: center; margin-top: 6px;"><i class="fa-brands fa-discord"></i> เข้าสู่ระบบด้วย Discord</a>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        
+        <!-- Header Banner -->
+        <div class="custom-header">
+            <h1><i class="fa-solid fa-code" style="color: #38bdf8;"></i> ฝากทำระบบ & สั่งทำสคริปต์</h1>
+            <p>คอมเมนต์ฝากโจทย์งานระบบที่ต้องการให้แอดมิน Master Siwakon พัฒนา ข้อความของคุณจะถูกแสดงบนบอร์ดสาธารณะ</p>
+        </div>
+
+        <!-- Layout Grid -->
+        <div class="content-grid">
+            
+            <!-- Left Form Input -->
+            <div class="form-card">
+                <h2><i class="fa-solid fa-pen-to-square"></i> ฟอร์มฝากทำระบบ</h2>
+                <p class="subtitle">กรอกรายละเอียดงานที่คุณต้องการสั่งทำ</p>
+
+                <form id="customForm" onsubmit="handleFormSubmit(event)">
+                    <div class="form-group">
+                        <label><i class="fa-brands fa-discord" style="color: #5865F2;"></i> ชื่อ Discord / ช่องทางติดต่อ *</label>
+                        <input type="text" id="authorInput" placeholder="เช่น got0219 หรือ FB: Siwakon" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-layer-group" style="color: #38bdf8;"></i> ประเภทระบบที่ต้องการ *</label>
+                        <select id="systemType" required>
+                            <option value="บอท Discord สั่งทำ">🤖 บอท Discord สั่งทำเฉพาะทาง</option>
+                            <option value="ระบบ AI / Chatbot">🧠 ระบบ AI / Chatbot คุยตอบคำถาม</option>
+                            <option value="เว็บ Dashboard / API">🌐 Web Dashboard / Express REST API</option>
+                            <option value="สคริปต์ Roblox / Lua">🎮 สคริปต์ Roblox Studio (Lua)</option>
+                            <option value="ระบบอื่นๆ">🛠️ ระบบอื่นๆ (โปรดระบุในรายละเอียด)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-money-bill-wave" style="color: #34d399;"></i> งบประมาณที่ตั้งไว้ (บาท) *</label>
+                        <input type="text" id="budgetInput" placeholder="เช่น 300 - 500 บาท" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-file-lines" style="color: #fbbf24;"></i> รายละเอียดความต้องการของระบบ *</label>
+                        <textarea id="detailInput" rows="4" placeholder="พิมพ์รายละเอียดคุณสมบัติระบบที่อยากได้..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        <i class="fa-solid fa-paper-plane"></i> โพสต์ฝากทำระบบลงบอร์ด
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right Public Live Comment Board -->
+            <div class="board-card">
+                <div class="board-header">
+                    <h2><i class="fa-solid fa-comments"></i> บอร์ดคอมเมนต์รายการฝากงาน</h2>
+                    <span style="font-size: 12px; color: #64748b;" id="commentCount">0 รายการ</span>
+                </div>
+
+                <div class="comments-list" id="commentsList">
+                    <div class="no-comments">ยังไม่มีรายการฝากทำระบบ เป็นคนแรกที่โพสต์เลย!</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Modal Discord Login -->
+    <div class="custom-modal-overlay" id="discordModal">
+        <div class="custom-modal">
+            <i class="fa-brands fa-discord" style="font-size: 50px; color: #5865F2; margin-bottom: 15px;"></i>
+            <h3 style="color: #38bdf8; margin-bottom: 10px;">กำลังพัฒนาระบบ</h3>
+            <p style="font-size: 13.5px; color: #94a3b8; margin-bottom: 25px;">ระบบเข้าสู่ระบบด้วย Discord กำลังอยู่ในระหว่างขั้นตอนพัฒนาโดย <b>Master Siwakon</b> เร็วๆ นี้เตรียมพบกันได้เลยครับ! 🚀</p>
+            <button style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; padding: 10px 25px; border-radius: 10px; font-size: 14.5px; font-weight: 600; cursor: pointer; width: 100%;" onclick="closeDiscordModal()">เข้าใจแล้ว</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 SHGOX BOT System • พัฒนาโดย ก๊อต (Master Siwakon) ค่ายบักก๊อต</p>
+    </footer>
+
+    <!-- Script สำหรับจัดเก็บและแสดงผลคอมเมนต์สาธารณะ -->
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function handleDiscordLogin() {
+            document.getElementById('discordModal').style.display = 'flex';
+            document.getElementById('mobileMenu').style.display = 'none';
+        }
+
+        function closeDiscordModal() {
+            document.getElementById('discordModal').style.display = 'none';
+        }
+
+        // ดึงข้อมูลคอมเมนต์จาก localStorage
+        function getSavedComments() {
+            const comments = localStorage.getItem('shgox_custom_comments');
+            return comments ? JSON.parse(comments) : [];
+        }
+
+        // บันทึกคอมเมนต์ลง localStorage
+        function saveComments(comments) {
+            localStorage.setItem('shgox_custom_comments', JSON.stringify(comments));
+        }
+
+        // เรนเดอร์การ์ดคอมเมนต์ขึ้นหน้าเว็บ
+        function renderComments() {
+            const comments = getSavedComments();
+            const listContainer = document.getElementById('commentsList');
+            const countSpan = document.getElementById('commentCount');
+
+            countSpan.innerText = `${comments.length} รายการ`;
+            listContainer.innerHTML = '';
+
+            if (comments.length === 0) {
+                listContainer.innerHTML = '<div class="no-comments">ยังไม่มีรายการฝากทำระบบ เป็นคนแรกที่โพสต์เลย!</div>';
+                return;
+            }
+
+            comments.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'comment-item';
+                card.innerHTML = `
+                    <div class="comment-top">
+                        <div class="comment-author"><i class="fa-solid fa-user-gear"></i> ${item.author}</div>
+                        <div class="comment-time"><i class="fa-regular fa-clock"></i> ${item.time}</div>
+                    </div>
+                    <div class="comment-meta">
+                        <span class="badge-system">${item.type}</span>
+                        <span class="badge-budget">งบ: ${item.budget}</span>
+                    </div>
+                    <div class="comment-text">${item.detail}</div>
+                    <div class="status-tag"><i class="fa-solid fa-spinner fa-spin"></i> สถานะ: กำลังรอแอดมินตรวจรับงาน</div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        // ฟังก์ชันเมื่อกดส่งฟอร์มฝากทำระบบ
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const author = document.getElementById('authorInput').value.trim();
+            const type = document.getElementById('systemType').value;
+            const budget = document.getElementById('budgetInput').value.trim();
+            const detail = document.getElementById('detailInput').value.trim();
+
+            if (!author || !budget || !detail) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วน!');
+                return;
+            }
+
+            const now = new Date();
+            const timeStr = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
+            const newComment = {
+                id: Date.now(),
+                author,
+                type,
+                budget,
+                detail,
+                time: timeStr
+            };
+
+            const comments = getSavedComments();
+            comments.unshift(newComment); // เพิ่มไว้บนสุด
+            saveComments(comments);
+
+            document.getElementById('customForm').reset();
+            renderComments();
+
+            alert('✅ โพสต์ฝากทำระบบลงบอร์ดเรียบร้อยแล้ว! ข้อมูลของคุณจะปรากฏบนบอร์ดสาธารณะทันที');
+        }
+
+        // โหลดคอมเมนต์เมื่อเปิดหน้าเว็บ
+        renderComments();
+    </script>
+</body>
+</html>

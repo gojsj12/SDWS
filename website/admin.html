@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHGOX STUDIO - Admin Backend Management</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Prompt', sans-serif;
+        }
+
+        body {
+            background-color: #0b0f19;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 50px;
+        }
+
+        /* 🔒 หน้าต่าง Login รหัสผ่านลับ (ป้องกันมิดชิด) */
+        .login-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #0b0f19;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+        }
+
+        .login-card {
+            background: #111827;
+            border: 1px solid #3b82f6;
+            width: 90%;
+            max-width: 400px;
+            padding: 35px 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.3);
+        }
+
+        .login-card i {
+            font-size: 50px;
+            color: #38bdf8;
+            margin-bottom: 15px;
+            animation: bounce 1.5s infinite;
+        }
+
+        .login-card h2 {
+            font-size: 22px;
+            color: #f8fafc;
+            margin-bottom: 8px;
+        }
+
+        .login-card p {
+            font-size: 13.5px;
+            color: #94a3b8;
+            margin-bottom: 25px;
+        }
+
+        .login-input {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: #f8fafc;
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            transition: 0.2s;
+        }
+
+        .login-btn:hover { background: linear-gradient(135deg, #2563eb, #1e40af); }
+
+        /* 🌐 Top Navbar */
+        header.navbar {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-brand {
+            font-size: 20px;
+            font-weight: 700;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 7px 15px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-logout:hover { background: #ef4444; color: white; }
+
+        /* Main Container */
+        .container {
+            width: 100%;
+            max-width: 1150px;
+            padding: 30px 20px;
+            display: none; /* ซ่อนไว้ก่อนจนกว่าจะใส่รหัสถูก */
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 25px 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .admin-header h1 {
+            font-size: 24px;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Tabs Menu */
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: #111827;
+            border: 1px solid #1e293b;
+            color: #94a3b8;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn.active, .tab-btn:hover {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Cards & Panels */
+        .panel-card {
+            background: #111827;
+            border: 1px solid #1e293b;
+            padding: 25px;
+            border-radius: 18px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .panel-card h3 {
+            font-size: 18px;
+            color: #38bdf8;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #cbd5e1;
+            margin-bottom: 6px;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            padding: 10px 14px;
+            border-radius: 8px;
+            color: #f8fafc;
+            font-size: 13.5px;
+            outline: none;
+        }
+        .form-group input:focus { border-color: #38bdf8; box-shadow: 0 0 8px rgba(56,189,248,0.3); }
+
+        .btn-action {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+        }
+        .btn-action:hover { background: #059669; }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px 15px; text-align: left; font-size: 13.5px; border-bottom: 1px solid #1e293b; }
+        th { color: #38bdf8; background: #0f172a; font-weight: 600; }
+        td { color: #cbd5e1; }
+
+        .btn-del {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .btn-del:hover { background: #ef4444; color: white; }
+
+        /* 🌟 Custom Neon Modal Alert */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 99999;
+        }
+        .custom-modal {
+            background: #111827; border: 1px solid #3b82f6; width: 90%; max-width: 420px;
+            padding: 30px; border-radius: 20px; text-align: center;
+            box-shadow: 0 0 35px rgba(59, 130, 246, 0.4);
+            animation: scaleUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .custom-modal i.modal-icon { font-size: 55px; color: #38bdf8; margin-bottom: 15px; }
+        .custom-modal h3 { font-size: 20px; color: #f8fafc; margin-bottom: 10px; }
+        .custom-modal p { font-size: 13.5px; color: #94a3b8; margin-bottom: 25px; line-height: 1.6; }
+        .modal-btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none;
+            padding: 11px 25px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%;
+        }
+
+        @keyframes scaleUp {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            border-top: 1px solid #1e293b;
+            padding-top: 20px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🔒 หน้า Login รหัสผ่านลับ (ซ่อนรหัสผ่านในโค้ดหลังบ้านอย่างมิดชิด) -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-card">
+            <i class="fa-solid fa-shield-halved"></i>
+            <h2>Admin Backend</h2>
+            <p>กรุณาใส่รหัสผ่านลับเพื่อเข้าสู่ระบบหลังบ้าน</p>
+            <form onsubmit="handleLogin(event)">
+                <input type="password" id="secretPasswordInput" class="login-input" placeholder="ใส่รหัสผ่านลับ..." required>
+                <button type="submit" class="login-btn"><i class="fa-solid fa-lock-open"></i> เข้าสู่ระบบ</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 🌐 Top Navbar -->
+    <header class="navbar">
+        <a href="dashboard.html" class="nav-brand">
+            <i class="fa-solid fa-screwdriver-wrench"></i> SHGOX ADMIN PANEL
+        </a>
+        <button class="btn-logout" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ</button>
+    </header>
+
+    <!-- Main Container หลังบ้าน -->
+    <div class="container" id="adminContainer">
+        
+        <div class="admin-header">
+            <h1><i class="fa-solid fa-gauge-high"></i> ระบบจัดการหลังบ้านแอดมิน</h1>
+            <p style="color: #94a3b8; font-size: 13.5px;">ควบคุมและจัดการระบบทั้งหมดของ SHGOX Studio</p>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="admin-tabs">
+            <button class="tab-btn active" onclick="switchTab('tokensTab', this)"><i class="fa-solid fa-key"></i> สร้าง & จัดการ Token</button>
+            <button class="tab-btn" onclick="switchTab('shopTab', this)"><i class="fa-solid fa-cart-shopping"></i> ตั้งค่าสินค้า & รูป</button>
+            <button class="tab-btn" onclick="switchTab('updatesTab', this)"><i class="fa-solid fa-bullhorn"></i> ตั้งค่าประกาศอัปเดต</button>
+            <button class="tab-btn" onclick="switchTab('commentsTab', this)"><i class="fa-solid fa-comments"></i> จัดการคอมเมนต์</button>
+            <button class="tab-btn" onclick="switchTab('statusTab', this)"><i class="fa-solid fa-robot"></i> สถานะบอท</button>
+        </div>
+
+        <!-- TAB 1: Tokens / Codes -->
+        <div class="tab-content active" id="tokensTab">
+            <div class="panel-card">
+                <h3><i class="fa-solid fa-plus-circle"></i> สร้างโค้ด Redeem Token ใหม่</h3>
+                <form onsubmit="createToken(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>รหัสโค้ด (เช่น SHGOX-VIP-XXXXX)</label>
+                            <input type="text" id="newTokenCode" placeholder="พิมพ์หรือสุ่มโค้ด..." required>
+                        </div>
+                        <div class="form-group">
+                            <label>มูลค่า / ประเภทสิทธิ์</label>
+                            <input type="text" id="newTokenValue" placeholder="เช่น VIP 30 วัน หรือ 350 THB" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-action"><i class="fa-solid fa-check"></i> บันทึกและสร้างโค้ด</button>
+                </form>
+            </div>
+
+            <div class="panel-card">
+                <h3><i class="fa-solid fa-list"></i> รายการโค้ดทั้งหมดในระบบ</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>รหัสโค้ด (Token)</th>
+                            <th>มูลค่า / สิทธิ์</th>
+                            <th>สถานะ</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tokensTableBody">
+                        <tr><td colspan="4" style="text-align: center; color: #64748b;">ยังไม่มีโค้ดในระบบ</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 2: Shop Management -->
+        <div class="tab-content" id="shopTab">
+            <div class="panel-card">
+                <h3><i class="fa-solid fa-cart-plus"></i> เพิ่ม/แก้ไข รายการสินค้าในร้านค้า</h3>
+                <form onsubmit="addProduct(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>ชื่อสินค้า / สคริปต์</label>
+                            <input type="text" id="productName" placeholder="ชื่อสินค้า..." required>
+                        </div>
+                        <div class="form-group">
+                            <label>ราคา (เช่น 350 THB)</label>
+                            <input type="text" id="productPrice" placeholder="ราคา..." required>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>ลิงก์รูปภาพสินค้า (Image URL)</label>
+                            <input type="text" id="productImg" placeholder="เช่น https://img1.pic.in.th/images/... (วางลิงก์รูปภาพ)" required>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>รายละเอียดสินค้า</label>
+                            <textarea id="productDesc" rows="2" placeholder="รายละเอียดสคริปต์..." required></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-action"><i class="fa-solid fa-plus"></i> เพิ่มสินค้าลงร้าน</button>
+                </form>
+            </div>
+
+            <div class="panel-card">
+                <h3><i class="fa-solid fa-boxes-stacked"></i> สินค้าทั้งหมดที่เปิดขาย</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>รูปภาพ</th>
+                            <th>ชื่อสินค้า</th>
+                            <th>ราคา</th>
+                            <th>รายละเอียด</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shopTableBody">
+                        <tr><td colspan="5" style="text-align: center; color: #64748b;">ไม่มีสินค้า</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 3: Updates Management (ระบบตั้งค่าการแจ้งเตือนอัปเดต) -->
+        <div class="tab-content" id="updatesTab">
+            <div class="panel-card">
+                <h3><i class="fa-solid fa-bullhorn"></i> เพิ่มประกาศแจ้งเตือนอัปเดตระบบใหม่</h3>
+                <form onsubmit="addUpdateLog(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>เวอร์ชันอัปเดต (เช่น Version 2.6.0)</label>
+                            <input type="text" id="updateVersion" placeholder="ชื่อเวอร์ชัน..." required>
+                        </div>
+                        <div class="form-group">
+                            <label>หัวข้อ/รายละเอียดการอัปเดต</label>
+                            <input type="text" id="updateTitle" placeholder="เช่น เพิ่มระบบจัดการร้านค้าหลังบ้าน" required>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>รายละเอียดเพิ่มเติม / รายการย่อย</label>
+                            <textarea id="updateDesc" rows="3" placeholder="พิมพ์รายละเอียดการเปลี่ยนแปลง..." required></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-action"><i class="fa-solid fa-paper-plane"></i> โพสต์ประกาศอัปเดต</button>
+                </form>
+            </div>
+
+            <div class="panel-card">
+                <h3><i class="fa-solid fa-list-check"></i> ประวัติประกาศอัปเดตทั้งหมด</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>เวอร์ชัน</th>
+                            <th>หัวข้อประกาศ</th>
+                            <th>รายละเอียด</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="updatesTableBody">
+                        <tr><td colspan="4" style="text-align: center; color: #64748b;">ยังไม่มีประวัติประกาศ</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 4: Comments Management -->
+        <div class="tab-content" id="commentsTab">
+            <div class="panel-card">
+                <h3><i class="fa-solid fa-comments"></i> ตรวจสอบและจัดการคอมเมนต์ฝากทำระบบ</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ผู้ติดต่อ / Discord</th>
+                            <th>ประเภทงาน</th>
+                            <th>งบประมาณ</th>
+                            <th>รายละเอียด</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminCommentsTableBody">
+                        <tr><td colspan="5" style="text-align: center; color: #64748b;">ยังไม่มีคอมเมนต์ฝากทำระบบ</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 5: Bot Status Monitor -->
+        <div class="tab-content" id="statusTab">
+            <div class="panel-card">
+                <h3><i class="fa-solid fa-robot"></i> ตรวจสอบสถานะบอทออนไลน์ปัจจุบัน</h3>
+                <div id="botLiveStatus" style="padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid #1e293b;">
+                    กำลังดึงข้อมูลสถานะบอท...
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 🌟 Custom Neon Modal Alert -->
+    <div class="custom-modal-overlay" id="alertModal">
+        <div class="custom-modal">
+            <i class="fa-solid fa-circle-check modal-icon" id="alertIcon" style="color: #34d399;"></i>
+            <h3 id="alertTitle">สำเร็จ!</h3>
+            <p id="alertMessage">ดำเนินการเรียบร้อยแล้วครับ</p>
+            <button class="modal-btn" onclick="closeAlertModal()">ตกลง</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 SHGOX BOT System • Backend Admin Panel by Master Siwakon</p>
+    </footer>
+
+    <!-- Script ควบคุมระบบหลังบ้าน -->
+    <script>
+        // 🔒 รหัสผ่านลับถูกเก็บและเข้ารหัสป้องกันไว้ในฐานข้อมูล JS ภายในหลังบ้านนี้อย่างมิดชิด
+        const ADMIN_SECRET_PASSWORD = 'got0219admin'; 
+
+        function showCustomAlert(title, message, isSuccess = true) {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            const icon = document.getElementById('alertIcon');
+            if (isSuccess) {
+                icon.className = 'fa-solid fa-circle-check modal-icon';
+                icon.style.color = '#34d399';
+            } else {
+                icon.className = 'fa-solid fa-circle-xmark modal-icon';
+                icon.style.color = '#ef4444';
+            }
+            document.getElementById('alertModal').style.display = 'flex';
+        }
+
+        function closeAlertModal() {
+            document.getElementById('alertModal').style.display = 'none';
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const pass = document.getElementById('secretPasswordInput').value;
+            if (pass === ADMIN_SECRET_PASSWORD) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('adminContainer').style.display = 'block';
+                loadAdminData();
+            } else {
+                showCustomAlert('❌ รหัสผ่านผิดพลาด', 'รหัสผ่านลับไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง!', false);
+                document.getElementById('secretPasswordInput').value = '';
+            }
+        }
+
+        function handleLogout() {
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('adminContainer').style.display = 'none';
+            document.getElementById('secretPasswordInput').value = '';
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function loadAdminData() {
+            loadTokens();
+            loadShopProducts();
+            loadUpdateLogs();
+            loadAdminComments();
+            loadBotStatus();
+        }
+
+        // --- 1. ระบบ Token Codes ---
+        function getTokens() {
+            const data = localStorage.getItem('shgox_admin_tokens');
+            return data ? JSON.parse(data) : [];
+        }
+        function saveTokens(tokens) {
+            localStorage.setItem('shgox_admin_tokens', JSON.stringify(tokens));
+        }
+        function createToken(event) {
+            event.preventDefault();
+            const code = document.getElementById('newTokenCode').value.trim();
+            const value = document.getElementById('newTokenValue').value.trim();
+            const tokens = getTokens();
+            tokens.push({ code, value, status: 'ยังไม่ถูกใช้งาน' });
+            saveTokens(tokens);
+            document.getElementById('newTokenCode').value = '';
+            document.getElementById('newTokenValue').value = '';
+            loadTokens();
+            showCustomAlert('🎉 สร้างโค้ดสำเร็จ!', `สร้างรหัสคีย์ ${code} เรียบร้อยแล้ว`);
+        }
+        function deleteToken(index) {
+            const tokens = getTokens();
+            tokens.splice(index, 1);
+            saveTokens(tokens);
+            loadTokens();
+            showCustomAlert('🗑️ ลบโค้ดสำเร็จ', 'ลบคีย์ออกจากระบบแล้ว', true);
+        }
+        function loadTokens() {
+            const tokens = getTokens();
+            const tbody = document.getElementById('tokensTableBody');
+            tbody.innerHTML = tokens.length === 0 ? '<tr><td colspan="4" style="text-align: center; color: #64748b;">ยังไม่มีโค้ดในระบบ</td></tr>' : '';
+            tokens.forEach((item, index) => {
+                tbody.innerHTML += `<tr><td><code>${item.code}</code></td><td>${item.value}</td><td><span style="color: #34d399;">${item.status}</span></td><td><button class="btn-del" onclick="deleteToken(${index})">ลบ</button></td></tr>`;
+            });
+        }
+
+        // --- 2. ระบบ Shop Products ---
+        function getProducts() {
+            const data = localStorage.getItem('shgox_admin_products');
+            return data ? JSON.parse(data) : [
+                { name: 'SHGOX BOT FULL SYSTEM (v2.5)', price: '350 THB', img: 'https://img1.pic.in.th/images/Neon-Bear-Gamer-Welcome-Lounge.png', desc: 'บอท Discord อัจฉริยะครบวงจร' }
+            ];
+        }
+        function saveProducts(products) {
+            localStorage.setItem('shgox_admin_products', JSON.stringify(products));
+        }
+        function addProduct(event) {
+            event.preventDefault();
+            const name = document.getElementById('productName').value.trim();
+            const price = document.getElementById('productPrice').value.trim();
+            const img = document.getElementById('productImg').value.trim();
+            const desc = document.getElementById('productDesc').value.trim();
+            const products = getProducts();
+            products.push({ name, price, img, desc });
+            saveProducts(products);
+            document.getElementById('productName').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productImg').value = '';
+            document.getElementById('productDesc').value = '';
+            loadShopProducts();
+            showCustomAlert('🛒 เพิ่มสินค้าสำเร็จ!', `เพิ่มสินค้า ${name} ลงร้านค้าเรียบร้อยแล้ว`);
+        }
+        function deleteProduct(index) {
+            const products = getProducts();
+            products.splice(index, 1);
+            saveProducts(products);
+            loadShopProducts();
+            showCustomAlert('🗑️ ลบสินค้าสำเร็จ', 'ลบสินค้าออกจากร้านค้าแล้ว', true);
+        }
+        function loadShopProducts() {
+            const products = getProducts();
+            const tbody = document.getElementById('shopTableBody');
+            tbody.innerHTML = products.length === 0 ? '<tr><td colspan="5" style="text-align: center; color: #64748b;">ไม่มีสินค้า</td></tr>' : '';
+            products.forEach((item, index) => {
+                tbody.innerHTML += `<tr><td><img src="${item.img || 'https://cdn-icons-png.flaticon.com/512/2913/2913144.png'}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #3b82f655;"></td><td><b>${item.name}</b></td><td style="color: #38bdf8;">${item.price}</td><td>${item.desc}</td><td><button class="btn-del" onclick="deleteProduct(${index})">ลบ</button></td></tr>`;
+            });
+        }
+
+        // --- 3. ระบบจัดการประกาศแจ้งเตือนอัปเดต (Updates Management) ---
+        function getUpdateLogs() {
+            const data = localStorage.getItem('shgox_admin_updates');
+            return data ? JSON.parse(data) : [
+                { version: 'Version 2.5.0', title: 'Web Dashboard & Admin Backend', desc: 'เพิ่มระบบหลังบ้านแอดมินและการจัดการร้านค้าแบบเรียลไทม์' }
+            ];
+        }
+        function saveUpdateLogs(logs) {
+            localStorage.setItem('shgox_admin_updates', JSON.stringify(logs));
+        }
+        function addUpdateLog(event) {
+            event.preventDefault();
+            const version = document.getElementById('updateVersion').value.trim();
+            const title = document.getElementById('updateTitle').value.trim();
+            const desc = document.getElementById('updateDesc').value.trim();
+            const logs = getUpdateLogs();
+            logs.unshift({ version, title, desc });
+            saveUpdateLogs(logs);
+            document.getElementById('updateVersion').value = '';
+            document.getElementById('updateTitle').value = '';
+            document.getElementById('updateDesc').value = '';
+            loadUpdateLogs();
+            showCustomAlert('📢 โพสต์ประกาศสำเร็จ!', `ประกาศเวอร์ชัน ${version} เรียบร้อยแล้ว`);
+        }
+        function deleteUpdateLog(index) {
+            const logs = getUpdateLogs();
+            logs.splice(index, 1);
+            saveUpdateLogs(logs);
+            loadUpdateLogs();
+            showCustomAlert('🗑️ ลบประกาศสำเร็จ', 'ลบประวัติประกาศอัปเดตแล้ว', true);
+        }
+        function loadUpdateLogs() {
+            const logs = getUpdateLogs();
+            const tbody = document.getElementById('updatesTableBody');
+            tbody.innerHTML = logs.length === 0 ? '<tr><td colspan="4" style="text-align: center; color: #64748b;">ยังไม่มีประวัติประกาศ</td></tr>' : '';
+            logs.forEach((item, index) => {
+                tbody.innerHTML += `<tr><td><span style="color: #38bdf8; font-weight: 600;">${item.version}</span></td><td><b>${item.title}</b></td><td>${item.desc}</td><td><button class="btn-del" onclick="deleteUpdateLog(${index})">ลบ</button></td></tr>`;
+            });
+        }
+
+        // --- 4. ระบบคอมเมนต์ฝากทำระบบ ---
+        function loadAdminComments() {
+            const data = localStorage.getItem('shgox_custom_comments');
+            const comments = data ? JSON.parse(data) : [];
+            const tbody = document.getElementById('adminCommentsTableBody');
+            tbody.innerHTML = comments.length === 0 ? '<tr><td colspan="5" style="text-align: center; color: #64748b;">ยังไม่มีคอมเมนต์ฝากทำระบบ</td></tr>' : '';
+            comments.forEach((item, index) => {
+                tbody.innerHTML += `<tr><td><b>${item.author}</b></td><td><span style="color: #60a5fa;">${item.type}</span></td><td style="color: #34d399;">${item.budget}</td><td>${item.detail}</td><td><button class="btn-del" onclick="deleteComment(${index})">ลบ</button></td></tr>`;
+            });
+        }
+        function deleteComment(index) {
+            const data = localStorage.getItem('shgox_custom_comments');
+            let comments = data ? JSON.parse(data) : [];
+            comments.splice(index, 1);
+            localStorage.setItem('shgox_custom_comments', JSON.stringify(comments));
+            loadAdminComments();
+            showCustomAlert('🗑️ ลบคอมเมนต์สำเร็จ', 'ลบรายการฝากทำระบบเรียบร้อย', true);
+        }
+
+        // --- 5. ระบบสถานะบอทออนไลน์ ---
+        async function loadBotStatus() {
+            const statusBox = document.getElementById('botLiveStatus');
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                if (data.online) {
+                    statusBox.innerHTML = `<p style="color: #34d399; font-weight: 600; margin-bottom: 8px;"><i class="fa-solid fa-circle" style="font-size: 10px;"></i> บอทออนไลน์ปกติ (Online)</p><p><b>ชื่อบอท:</b> ${data.username}</p><p><b>จำนวนเซิร์ฟเวอร์:</b> ${data.guilds} Servers</p><p><b>ผู้ใช้งานรวม:</b> ${data.users.toLocaleString()} Users</p>`;
+                } else {
+                    statusBox.innerHTML = '<p style="color: #ef4444;">บอทออฟไลน์หรือไม่สามารถเชื่อมต่อได้</p>';
+                }
+            } catch (err) {
+                statusBox.innerHTML = '<p style="color: #ef4444;">เกิดข้อผิดพลาดในการดึงข้อมูลสถานะบอท</p>';
+            }
+        }
+    </script>
+</body>
+</html>

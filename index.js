@@ -10,6 +10,10 @@ const handleGuildCreate = require('./handler/guildCreate'); // 📥 ระบบ
 const handleAI = require('./handler/aiHandler');
 const handleTicket = require('./handler/ticketHandler');
 const autoClearScheduler = require('./handler/autoClearScheduler');
+const handleAntiLink = require('./handler/antiLinkHandler'); // 🔒 ระบบป้องกันลิงก์และสแปม
+const applyHandler = require('./handler/applyHandler'); // 🎙️ ระบบสัมภาษณ์ผู้สมัครผ่าน Modal
+const levelHandler = require('./handler/levelHandler'); // 📊 ระบบเก็บเลเวลและแจ้งเตือนอัปเลเวล
+const handleIntro = require('./handler/interactionCreate'); // 📝 ดึงระบบแนะนำตัวเข้ามาใช้งาน
 
 const client = new Client({
     intents: [
@@ -69,7 +73,7 @@ app.get('/api/status', (async (req, res) => {
     }
 }));
 
-// 📊 [เพิ่มใหม่] API สำหรับส่งข้อมูลรายการคำสั่งทั้งหมดในโฟลเดอร์ commands ให้หน้าเว็บแสดงผล
+// 📊 API สำหรับส่งข้อมูลรายการคำสั่งทั้งหมดในโฟลเดอร์ commands ให้หน้าเว็บแสดงผล
 app.get('/api/commands', (req, res) => {
     try {
         const commandsPath = path.join(__dirname, 'commands');
@@ -167,10 +171,66 @@ client.on('guildCreate', (guild) => {
 });
 
 // ----------------------------------------------------
-// ระบบ AI แชทอัตโนมัติ (SHGOX ค่าย บักก๊อต) ผ่าน Handler
+// ระบบจัดการข้อความ (MessageCreate) - รวม Level System, Anti-Link, AI Chat และ DM Forwarder
 // ----------------------------------------------------
-client.on('messageCreate', (message) => {
-    handleAI(message);
+client.on('messageCreate', async (message) => {
+    if (!message || message.author.bot) return;
+
+    // 📩 [เพิ่มใหม่] หากผู้ใช้พิมพ์ข้อความมาทางแชตส่วนตัว (DM) ของบอท ส่งเข้าห้องที่ตั้งค่าไว้ในเซิร์ฟเวอร์เพื่อให้แอดมินดูได้
+    if (!message.guild) {
+        try {
+            const configPath = path.join(__dirname, 'ai-config.json');
+            if (fs.existsSync(configPath)) {
+                const db = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+
+                for (const guildId of Object.keys(db)) {
+                    const channelId = db[guildId]?.dmForwardChannel;
+                    if (channelId) {
+                        const guild = client.guilds.cache.get(guildId);
+                        if (guild) {
+                            const targetChannel = await guild.channels.fetch(channelId).catch(() => null);
+                            if (targetChannel && targetChannel.isTextBased()) {
+                                const dmEmbed = new EmbedBuilder()
+                                    .setColor('#5865F2')
+                                    .setAuthor({ name: `📩 ข้อความใหม่จาก DM: ${message.author.tag}`, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
+                                    .setDescription(message.content || '[ส่งไฟล์/รูปภาพหรือสื่อ]')
+                                    .addFields(
+                                        { name: '👤 ผู้ส่ง', value: `<@${message.author.id}>`, inline: true },
+                                        { name: '🆔 User ID', value: `\`${message.author.id}\``, inline: true }
+                                    )
+                                    .setTimestamp();
+
+                                if (message.attachments.size > 0) {
+                                    const attachmentUrl = message.attachments.first().url;
+                                    dmEmbed.setImage(attachmentUrl);
+                                }
+
+                                await targetChannel.send({ embeds: [dmEmbed] });
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Error forwarding DM to server:', err);
+        }
+    }
+
+    // 📊 0. รันระบบเก็บเลเวลจากข้อความ (ทำงานเฉพาะในเซิร์ฟเวอร์)
+    if (message.guild && typeof levelHandler.handleMessageXP === 'function') {
+        await levelHandler.handleMessageXP(message);
+    }
+
+    // 🔒 1. รันระบบป้องกันลิงก์ (Anti-Link Check) - ทำงานเฉพาะในเซิร์ฟเวอร์
+    if (message.guild && typeof handleAntiLink === 'function') {
+        const isLinkBlocked = await handleAntiLink(message);
+        if (isLinkBlocked) return;
+    }
+
+    // 🧠 2. ระบบ AI แชทอัตโนมัติ (รองรับทั้งในเซิร์ฟเวอร์และ DM)
+    if (typeof handleAI === 'function') {
+        await handleAI(message);
+    }
 });
 
 // ----------------------------------------------------
@@ -178,7 +238,64 @@ client.on('messageCreate', (message) => {
 // ----------------------------------------------------
 client.on('interactionCreate', async (interaction) => {
 
-    // 0.1 📩 จัดการระบบคำสั่ง /dm (Modal Submit และ Buttons พรีเมียม)
+    // 📝 [ระบบแนะนำตัว] ตรวจสอบและดักทำงานปุ่ม intro:start หรือ Modal intro:submit ก่อน
+    if (typeof handleIntro?.execute === 'function') {
+        if ((interaction.isButton() && interaction.customId === 'intro:start') ||
+            (interaction.isModalSubmit() && interaction.customId === 'intro:submit')) {
+            await handleIntro.execute(interaction, client);
+            return;
+        }
+    }
+
+    // 0.0 🎙️ [สำคัญ] จัดการระบบปุ่มกด, ปุ่มฉุกเฉิน และ Modal ของระบบสัมภาษณ์ (Apply System) ก่อนอันดับแรก
+    if (interaction.isButton() && (interaction.customId === 'start_apply_btn' || interaction.customId === 'answer_question_btn' || interaction.customId === 'apply_help_btn')) {
+        if (interaction.customId === 'start_apply_btn') {
+            if (typeof applyHandler.handleButton === 'function') {
+                await applyHandler.handleButton(interaction);
+                return;
+            }
+        } else {
+            if (typeof applyHandler.handleModalTrigger === 'function') {
+                await applyHandler.handleModalTrigger(interaction);
+                return;
+            }
+        }
+    }
+    if (interaction.isModalSubmit() && interaction.customId.startsWith('apply_modal_step_')) {
+        if (typeof applyHandler.handleModalSubmit === 'function') {
+            await applyHandler.handleModalSubmit(interaction);
+            return;
+        }
+    }
+
+    // 🎙️ จัดการปุ่มกดจัดการเซสชันของ /applysetup list (เช่น apply_extend_, apply_reset_, apply_close_)
+    if (interaction.isButton() && interaction.customId.startsWith('apply_')) {
+        const applySetupCmd = client.commands.get('applysetup');
+        if (applySetupCmd && applySetupCmd.handleInteraction) {
+            const handled = await applySetupCmd.handleInteraction(interaction);
+            if (handled) return;
+        }
+    }
+
+    // 📊 0.1 จัดการเมนูเลือกห้องสำหรับระบบเลเวล (/levelsetup)
+    if (interaction.isChannelSelectMenu() && interaction.customId === 'level_channel_select') {
+        const levelSetupCmd = client.commands.get('levelsetup');
+        if (levelSetupCmd && levelSetupCmd.handleInteraction) {
+            await levelSetupCmd.handleInteraction(interaction);
+            return;
+        }
+    }
+
+    // 0.2 🎙️ จัดการเมนูเลือกห้องสำหรับระบบสัมภาษณ์ (/applysetup log และ /applysetup dmchannels)
+    if (interaction.isChannelSelectMenu() && (interaction.customId === 'apply_log_select' || interaction.customId === 'apply_dm_forward_select')) {
+        const applySetupCmd = client.commands.get('applysetup');
+        if (applySetupCmd && applySetupCmd.handleInteraction) {
+            await applySetupCmd.handleInteraction(interaction);
+            return;
+        }
+    }
+
+    // 0.3 📩 จัดการระบบคำสั่ง /dm (Modal Submit และ Buttons พรีเมียม)
     if (interaction.isModalSubmit() || interaction.isButton()) {
         const dmCommand = client.commands.get('dm');
         if (dmCommand && dmCommand.handleInteraction) {
@@ -187,7 +304,7 @@ client.on('interactionCreate', async (interaction) => {
         }
     }
 
-    // 0.2 🎙️ จัดการระบบคำสั่ง /interview (Modal Submit และ Buttons ประกาศสัมภาษณ์)
+    // 0.4 🎙️ จัดการระบบคำสั่ง /interview (Modal Submit และ Buttons ประกาศสัมภาษณ์เดิม)
     if (interaction.isModalSubmit() || interaction.isButton()) {
         const interviewCmd = client.commands.get('interview');
         if (interviewCmd && interviewCmd.handleInteraction) {
@@ -196,7 +313,7 @@ client.on('interactionCreate', async (interaction) => {
         }
     }
 
-    // 0.3 🛡️ จัดการระบบคำสั่ง /changestaff (Modal Submit และ Buttons ประกาศเปลี่ยนสตาฟ)
+    // 0.5 🛡️ จัดการระบบคำสั่ง /changestaff (Modal Submit และ Buttons ประกาศเปลี่ยนสตาฟ)
     if (interaction.isModalSubmit() || interaction.isButton()) {
         const staffCmd = client.commands.get('changestaff');
         if (staffCmd && staffCmd.handleInteraction) {
@@ -205,7 +322,7 @@ client.on('interactionCreate', async (interaction) => {
         }
     }
 
-    // 0.4 👑 จัดการระบบคำสั่ง /reactionrole (Modal Submit และ Buttons กดรับยศ)
+    // 0.6 👑 จัดการระบบคำสั่ง /reactionrole (Modal Submit และ Buttons กดรับยศ)
     if (interaction.isModalSubmit() || interaction.isButton()) {
         const roleCmd = client.commands.get('reactionrole');
         if (roleCmd && roleCmd.handleInteraction) {
@@ -214,16 +331,16 @@ client.on('interactionCreate', async (interaction) => {
         }
     }
 
-    // 0.5 🚨 จัดการระบบคำสั่ง /adminnotice (Modal Submit และ Buttons กระจายประกาศ) [เพิ่มใหม่เพื่อแก้บั๊ก DM]
+    // 0.7 🚨 จัดการระบบคำสั่ง /adminnotice (Modal Submit และ Buttons กระจายประกาศ)
     if (interaction.isModalSubmit() || interaction.isButton()) {
         const adminNoticeCmd = client.commands.get('adminnotice');
         if (adminNoticeCmd && adminNoticeCmd.handleInteraction) {
             const handled = await adminNoticeCmd.handleInteraction(interaction);
-            if (handled) return; // หากเป็น interaction ของ adminnotice ให้จัดการจบตรงนี้ทันที
+            if (handled) return; 
         }
     }
 
-    // 1. จัดการระบบตั๋ว (ปุ่มกด Button & Dropdown Select Menu)
+    // 1. จัดการระบบตั๋ว (ปุ่มกด Button & Dropdown Select Menu ภายในเซิร์ฟเวอร์)
     if (interaction.isButton() || interaction.isStringSelectMenu()) {
         try {
             await handleTicket(interaction);

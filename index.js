@@ -4,6 +4,23 @@ const path = require('path');
 const express = require('express'); // 🌐 เพิ่ม Express สำหรับรันเว็บเซิร์ฟเวอร์
 require('dotenv').config();
 
+// ----------------------------------------------------
+// 🛡️ [เพิ่มใหม่] ระบบป้องกันบอทล่ม/เซิฟเวอร์ดับ (Global Error Handlers)
+// ----------------------------------------------------
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // ป้องกันไม่ให้บอท Crash เมื่อเกิด Promise Error ที่ไม่ได้ดักจับ
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception thrown:', error);
+    // ป้องกันไม่ให้โปรแกรมหยุดทำงานทันที
+});
+
+process.on('uncaughtExceptionMonitor', (error, origin) => {
+    console.error('Uncaught Exception Monitor:', error, origin);
+});
+
 // เรียกใช้ไฟล์ Handler ทั้งหมดที่แยกไว้
 const setBotStatus = require('./handler/status');
 const handleGuildCreate = require('./handler/guildCreate'); // 📥 ระบบต้อนรับเมื่อบอทเข้าเซิร์ฟเวอร์

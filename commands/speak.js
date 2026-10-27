@@ -40,20 +40,20 @@ module.exports = {
             const textToSpeak = interaction.options.getString('text');
             await interaction.deferReply();
 
-            // ตรวจสอบว่าบอทอยู่ในห้องเสียงของกิลด์นี้อยู่แล้วหรือไม่
+            // ตรวจสอบสถานะการเชื่อมต่อเดิม
             let connection = getVoiceConnection(interaction.guild.id);
 
-            if (!connection) {
-                // เชื่อมต่อบอทเข้าห้องเสียง
+            // ถ้าบอทยังไม่ได้เข้าห้อง หรืออยู่ผิดห้อง ให้ดึงบอทเข้าห้องเสียงปัจจุบันทันที
+            if (!connection || connection.joinConfig.channelId !== voiceChannel.id) {
                 connection = joinVoiceChannel({
                     channelId: voiceChannel.id,
                     guildId: interaction.guild.id,
                     adapterCreator: interaction.guild.voiceAdapterCreator,
-                    selfDeaf: false, // ป้องกันการปิดเสียงตัวเอง
+                    selfDeaf: false,
                     selfMute: false
                 });
 
-                // --- ระบบป้องกันบอทหลุด/ถูกเตะออกจากห้อง (Auto-Reconnect) ---
+                // 🛡️ ระบบ Anti-Disconnect: ถ้าบอทถูกเตะหรือสัญญาณหลุด ให้พยายามเชื่อมต่อใหม่ถาวร
                 connection.on(VoiceConnectionStatus.Disconnected, async () => {
                     try {
                         await Promise.race([
@@ -61,11 +61,7 @@ module.exports = {
                             entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
                         ]);
                     } catch (error) {
-                        try {
-                            connection.destroy();
-                        } catch {}
-                        
-                        // พยายามต่อกลับเข้าห้องเดิมอัตโนมัติ
+                        try { connection.destroy(); } catch {}
                         try {
                             joinVoiceChannel({
                                 channelId: voiceChannel.id,
@@ -75,28 +71,26 @@ module.exports = {
                                 selfMute: false
                             });
                         } catch (reconnectErr) {
-                            console.error('ไม่สามารถเชื่อมต่อห้องเสียงกลับได้:', reconnectErr);
+                            console.error('ไม่สามารถต่อสายกลับห้องเสียงได้:', reconnectErr);
                         }
                     }
                 });
             }
 
-            // แปลงข้อความให้เป็นเสียงพูดด้วย discord-tts (ครอบด้วย try-catch แยกเพื่อกันสตรีมพังแล้วบอทค้าง)
+            // แปลงข้อความ TTS
             let stream;
             try {
                 stream = await simplementts.getVoiceStream(textToSpeak, { lang: 'th' });
             } catch (ttsError) {
                 console.error('TTS Error:', ttsError);
-                return interaction.editReply('❌ เกิดข้อผิดพลาดในการแปลงข้อความเสียง');
+                return interaction.editReply('❌ เกิดข้อผิดพลาดในการสร้างเสียงพูด');
             }
 
             const resource = createAudioResource(stream);
             const player = createAudioPlayer();
 
-            // ดัก Error ของตัวเล่นเสียง (Audio Player Error) เพื่อไม่ให้แอพดับ
-            player.on('error', error => {
-                console.error('Audio Player Error:', error);
-            });
+            // ดัก Error กันตัวเล่นเสียงค้าง/ดับ
+            player.on('error', error => console.error('Audio Player Error:', error));
 
             connection.subscribe(player);
             player.play(resource);
@@ -122,13 +116,15 @@ module.exports = {
 
             await interaction.editReply({ embeds: [embedSpeak] });
 
-            // เมื่อเล่นเสียงจบ ปล่อยว่างไว้ บอทจะไม่หลุดออกจากห้อง
-            player.on(AudioPlayerStatus.Idle, () => {});
+            // 🔒 สั่งให้เมื่อพูดจบแล้ว ให้อยู่ในห้องต่อถาวร (ไม่มีคำสั่ง destroy)
+            player.on(AudioPlayerStatus.Idle, () => {
+                // คงสถานะการเชื่อมต่อไว้ ไม่สั่งออกจากห้อง
+            });
 
         } catch (error) {
             console.error('Error in /speak:', error);
             if (interaction.deferred || interaction.replied) {
-                await interaction.editReply('❌ เกิดข้อผิดพลาดบางประการ แต่ระบบป้องกันได้ทำงานแล้ว บอทจะไม่ล่ม').catch(() => {});
+                await interaction.editReply('❌ เกิดข้อผิดพลาดบางประการในการสั่งงานเสียง').catch(() => {});
             }
         }
     },

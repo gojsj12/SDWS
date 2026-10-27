@@ -28,20 +28,42 @@ function logToFile(action, details) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('speak')
-        .setDescription('ให้บอทเข้าห้องเสียงและพูดข้อความที่คุณต้องการ (ปักหลักถาวร + ระบบ Log)')
+        .setDescription('ให้บอทเข้าห้องเสียงตาม ID หรือห้องปัจจุบัน และพูดข้อความที่ต้องการ')
         .addStringOption(option =>
             option.setName('text')
                 .setDescription('ข้อความที่ต้องการให้บอทพูด')
                 .setRequired(true)
+        )
+        .addStringOption(option =>
+            option.setName('channel_id')
+                .setDescription('ID ของห้องเสียงที่ต้องการให้บอทเข้าไป (ถ้าไม่ใส่จะเข้าห้องที่คุณอยู่)')
+                .setRequired(false)
         ),
 
     async execute(interaction) {
         try {
-            const voiceChannel = interaction.member?.voice?.channel;
+            const channelIdOption = interaction.options.getString('channel_id');
+            let voiceChannel;
+
+            // 1. ตรวจสอบว่าผู้ใช้ใส่ Channel ID มาหรือไม่
+            if (channelIdOption) {
+                const fetchedChannel = await interaction.guild.channels.fetch(channelIdOption).catch(() => null);
+                if (fetchedChannel && fetchedChannel.isVoiceBased()) {
+                    voiceChannel = fetchedChannel;
+                } else {
+                    return interaction.reply({
+                        content: '❌ ไม่พบห้องเสียงจาก ID ที่ระบุ หรือ ID นั้นไม่ใช่ห้องเสียง',
+                        ephemeral: true
+                    });
+                }
+            } else {
+                // ถ้าไม่ได้ใส่ ID ให้ใช้ห้องเสียงที่ผู้ใช้กำลังเชื่อมต่ออยู่
+                voiceChannel = interaction.member?.voice?.channel;
+            }
 
             if (!voiceChannel) {
                 return interaction.reply({ 
-                    content: '❌ กรุณาเข้าห้องเสียง (Voice Channel) ก่อนใช้งานคำสั่งนี้', 
+                    content: '❌ กรุณาเข้าห้องเสียง หรือใส่ ID ของห้องเสียงในช่อง `channel_id` ก่อนใช้งานคำสั่งนี้', 
                     ephemeral: true 
                 });
             }
@@ -49,7 +71,7 @@ module.exports = {
             // ตรวจสอบสิทธิ์การเข้าและพูดในห้องเสียง
             const permissions = voiceChannel.permissionsFor(interaction.client.user);
             if (!permissions || !permissions.has('Connect') || !permissions.has('Speak')) {
-                logToFile('ERROR', `บอทไม่มีสิทธิ์ Connect/Speak ในห้อง: ${voiceChannel.name}`);
+                logToFile('ERROR', `บอทไม่มีสิทธิ์ Connect/Speak ในห้อง: ${voiceChannel.name} (${voiceChannel.id})`);
                 return interaction.reply({ 
                     content: '❌ บอทไม่มีสิทธิ์ในการ **Connect (เข้าห้อง)** หรือ **Speak (พูด)** ในห้องเสียงนี้ กรุณาตรวจสอบยศหรือสิทธิ์ของบอท', 
                     ephemeral: true 
@@ -62,7 +84,7 @@ module.exports = {
             // ตรวจสอบสถานะการเชื่อมต่อเดิม
             let connection = getVoiceConnection(interaction.guild.id);
 
-            // ถ้าบอทยังไม่ได้เข้าห้อง หรืออยู่ผิดห้อง ให้ดึงบอทเข้าห้องเสียงปัจจุบันทันที
+            // ถ้าบอทยังไม่ได้เข้าห้อง หรืออยู่ผิดห้อง ให้ดึงบอทเข้าห้องเสียงเป้าหมายทันที
             if (!connection || connection.joinConfig.channelId !== voiceChannel.id) {
                 connection = joinVoiceChannel({
                     channelId: voiceChannel.id,
@@ -132,7 +154,7 @@ module.exports = {
                 .setTitle('กำลังพูดข้อความในห้องเสียง')
                 .setDescription(`\`\`\`${textToSpeak}\`\`\``)
                 .addFields(
-                    { name: 'ห้องเสียง', value: `${voiceChannel.name}`, inline: true },
+                    { name: 'ห้องเสียง', value: `${voiceChannel.name} (\`${voiceChannel.id}\`)`, inline: true },
                     { name: 'ผู้สั่งการ', value: `${interaction.user.username}`, inline: true },
                     { name: 'สถานะระบบ', value: '🟢 ปักหลักถาวร + บันทึก Log แล้ว', inline: false }
                 )

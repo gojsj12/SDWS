@@ -18,28 +18,28 @@ module.exports = {
         ),
 
     async execute(interaction) {
-        const voiceChannel = interaction.member.voice.channel;
-
-        if (!voiceChannel) {
-            return interaction.reply({ 
-                content: '❌ กรุณาเข้าห้องเสียง (Voice Channel) ก่อนใช้งานคำสั่งนี้', 
-                ephemeral: true 
-            });
-        }
-
-        // ตรวจสอบสิทธิ์การเข้าและพูดในห้องเสียง (Permission Check)
-        const permissions = voiceChannel.permissionsFor(interaction.client.user);
-        if (!permissions.has('Connect') || !permissions.has('Speak')) {
-            return interaction.reply({ 
-                content: '❌ บอทไม่มีสิทธิ์ในการ **Connect (เข้าห้อง)** หรือ **Speak (พูด)** ในห้องเสียงนี้ กรุณาตรวจสอบยศหรือสิทธิ์ของบอท', 
-                ephemeral: true 
-            });
-        }
-
-        const textToSpeak = interaction.options.getString('text');
-        await interaction.deferReply();
-
         try {
+            const voiceChannel = interaction.member?.voice?.channel;
+
+            if (!voiceChannel) {
+                return interaction.reply({ 
+                    content: '❌ กรุณาเข้าห้องเสียง (Voice Channel) ก่อนใช้งานคำสั่งนี้', 
+                    ephemeral: true 
+                });
+            }
+
+            // ตรวจสอบสิทธิ์การเข้าและพูดในห้องเสียง
+            const permissions = voiceChannel.permissionsFor(interaction.client.user);
+            if (!permissions || !permissions.has('Connect') || !permissions.has('Speak')) {
+                return interaction.reply({ 
+                    content: '❌ บอทไม่มีสิทธิ์ในการ **Connect (เข้าห้อง)** หรือ **Speak (พูด)** ในห้องเสียงนี้ กรุณาตรวจสอบยศหรือสิทธิ์ของบอท', 
+                    ephemeral: true 
+                });
+            }
+
+            const textToSpeak = interaction.options.getString('text');
+            await interaction.deferReply();
+
             // ตรวจสอบว่าบอทอยู่ในห้องเสียงของกิลด์นี้อยู่แล้วหรือไม่
             let connection = getVoiceConnection(interaction.guild.id);
 
@@ -49,6 +49,8 @@ module.exports = {
                     channelId: voiceChannel.id,
                     guildId: interaction.guild.id,
                     adapterCreator: interaction.guild.voiceAdapterCreator,
+                    selfDeaf: false, // ป้องกันการปิดเสียงตัวเอง
+                    selfMute: false
                 });
 
                 // --- ระบบป้องกันบอทหลุด/ถูกเตะออกจากห้อง (Auto-Reconnect) ---
@@ -58,19 +60,19 @@ module.exports = {
                             entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
                             entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
                         ]);
-                        // กำลังเชื่อมต่อกลับสำเร็จ
                     } catch (error) {
-                        // ถ้าหลุดถาวร ให้บอทพยายามต่อกลับเข้าห้องเดิม
                         try {
                             connection.destroy();
                         } catch {}
                         
-                        // สร้างการเชื่อมต่อใหม่เข้าห้องเดิมอัตโนมัติ
+                        // พยายามต่อกลับเข้าห้องเดิมอัตโนมัติ
                         try {
                             joinVoiceChannel({
                                 channelId: voiceChannel.id,
                                 guildId: interaction.guild.id,
                                 adapterCreator: interaction.guild.voiceAdapterCreator,
+                                selfDeaf: false,
+                                selfMute: false
                             });
                         } catch (reconnectErr) {
                             console.error('ไม่สามารถเชื่อมต่อห้องเสียงกลับได้:', reconnectErr);
@@ -79,10 +81,22 @@ module.exports = {
                 });
             }
 
-            // แปลงข้อความให้เป็นเสียงพูดด้วย discord-tts
-            const stream = await simplementts.getVoiceStream(textToSpeak, { lang: 'th' });
+            // แปลงข้อความให้เป็นเสียงพูดด้วย discord-tts (ครอบด้วย try-catch แยกเพื่อกันสตรีมพังแล้วบอทค้าง)
+            let stream;
+            try {
+                stream = await simplementts.getVoiceStream(textToSpeak, { lang: 'th' });
+            } catch (ttsError) {
+                console.error('TTS Error:', ttsError);
+                return interaction.editReply('❌ เกิดข้อผิดพลาดในการแปลงข้อความเสียง');
+            }
+
             const resource = createAudioResource(stream);
             const player = createAudioPlayer();
+
+            // ดัก Error ของตัวเล่นเสียง (Audio Player Error) เพื่อไม่ให้แอพดับ
+            player.on('error', error => {
+                console.error('Audio Player Error:', error);
+            });
 
             connection.subscribe(player);
             player.play(resource);
@@ -108,14 +122,14 @@ module.exports = {
 
             await interaction.editReply({ embeds: [embedSpeak] });
 
-            // เมื่อเล่นเสียงจบ จะไม่ทำลาย connection ทิ้ง เพื่อให้บอทค้างอยู่ในห้องตามต้องการ
-            player.on(AudioPlayerStatus.Idle, () => {
-                // ปล่อยว่างไว้ บอทจะไม่หลุดออกจากห้องเมื่อพูดจบ
-            });
+            // เมื่อเล่นเสียงจบ ปล่อยว่างไว้ บอทจะไม่หลุดออกจากห้อง
+            player.on(AudioPlayerStatus.Idle, () => {});
 
         } catch (error) {
             console.error('Error in /speak:', error);
-            await interaction.editReply('❌ เกิดข้อผิดพลาดในการสร้างเสียงพูดหรือเชื่อมต่อห้องเสียง');
+            if (interaction.deferred || interaction.replied) {
+                await interaction.editReply('❌ เกิดข้อผิดพลาดบางประการ แต่ระบบป้องกันได้ทำงานแล้ว บอทจะไม่ล่ม').catch(() => {});
+            }
         }
     },
 };
